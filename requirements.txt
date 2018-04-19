@@ -1,0 +1,8 @@
+Django
+djangorestframework
+requests
+djangorestframework-jwt
+psycopg2-binary
+neomodel
+django_neomodel
+pillow
