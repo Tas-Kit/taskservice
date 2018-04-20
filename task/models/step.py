@@ -22,7 +22,7 @@ class StepModel(StructuredNode):
     deadline = DateTimeProperty(required=False)
     pos_x = FloatProperty(required=False)
     pos_y = FloatProperty(required=False)
-    asignees = ArrayProperty(StringProperty(), default=[])
+    assignees = ArrayProperty(StringProperty(), default=[])
     reviewers = ArrayProperty(StringProperty(), default=[])
 
     children = RelationshipTo('StepModel', 'HasChild', model=HasChild)

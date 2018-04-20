@@ -1,9 +1,9 @@
-from neomodel import StructuredRel, StringProperty
+from neomodel import StructuredRel, StringProperty, IntegerProperty
 from taskservice.constants import SUPER_ROLES, ACCEPTANCES, NODE_TYPE
 
 
 class HasTask(StructuredRel):
-    super_role = StringProperty(required=True, choices=SUPER_ROLES)
+    super_role = IntegerProperty(required=True, choices=SUPER_ROLES)
     role = StringProperty()
     acceptance = StringProperty(default='w', choices=ACCEPTANCES)
 
