@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 from rest_framework.views import APIView
 from rest_framework.response import Response
 # from rest_framework_jwt.authentication import JSONWebTokenAuthentication
-from task.models import TaskModel
+from task.models.task import TaskModel
 from rest_framework import permissions
 # Create your views here.
 
