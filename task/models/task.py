@@ -36,7 +36,7 @@ class TaskModel(StructuredNode):
 
     steps = RelationshipTo('StepModel', 'HasStep', model=HasStep)
 
-    def get_steps(self):
+    def get_graph(self):
         """get all steps of this task
 
         Returns:
@@ -44,7 +44,15 @@ class TaskModel(StructuredNode):
         """
         return None
 
-    def save_steps(self, data):
+    def clone_graph(self):
+        """clone all the step model data and relations
+
+        Returns:
+            TYPE: Description
+        """
+        return None
+
+    def save_graph(self, data):
         """save all the step data
 
         Args:
