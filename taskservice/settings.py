@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
 import os
+import logging
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -27,6 +28,12 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', 'proxyserver', 'taskservice']
 
+logger = logging.getLogger('taskservice')
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+fh = logging.FileHandler('taskservice.log')
+fh.setFormatter(formatter)
+logger.addHandler(fh)
+logger.setLevel(logging.DEBUG if DEBUG else logging.WARNING)
 
 # Application definition
 
@@ -41,6 +48,10 @@ INSTALLED_APPS = [
     'rest_framework',
     'task'
 ]
+
+REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'taskservice.exceptions.handle_exception'
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

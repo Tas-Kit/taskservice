@@ -8,17 +8,6 @@ class UserNode(StructuredNode):
     uid = StringProperty(unique_index=True, required=True)
     tasks = RelationshipTo(TaskInst, HasTask, model=HasTask)
 
-    def get_tasks(self):
-        """get all tasks for a user
-
-        Args:
-            uid (TYPE): Description
-
-        Returns:
-            TYPE: Description
-        """
-        return self.tasks.all()
-
     @db.transaction
     def create_task(self, task_name):
         """create task for a user

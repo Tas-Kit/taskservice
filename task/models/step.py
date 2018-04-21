@@ -5,6 +5,7 @@ from neomodel import (
     StringProperty,
     DateTimeProperty,
     ArrayProperty,
+    UniqueIdProperty,
     RelationshipTo,
     RelationshipFrom
 )
@@ -14,6 +15,7 @@ from taskservice.constants import EFFORT_UNITS, STATUS_LIST
 
 
 class StepModel(StructuredNode):
+    sid = UniqueIdProperty()
     name = StringProperty(required=True)
     description = StringProperty(required=False)
     is_optional = BooleanProperty(default=False)

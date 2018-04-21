@@ -6,6 +6,7 @@ from neomodel import (
     FloatProperty,
     DateTimeProperty,
     ArrayProperty,
+    UniqueIdProperty,
     RelationshipTo,
     RelationshipFrom
 )
@@ -29,6 +30,7 @@ class TaskModel(StructuredNode):
         steps (TYPE): Description
     """
 
+    tid = UniqueIdProperty()
     name = StringProperty(required=True)
     description = StringProperty(required=False)
     expected_effort_num = FloatProperty(index=False, default=0)
