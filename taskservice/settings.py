@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_neomodel',
     'rest_framework',
-    'rest_framework_jwt',
     'task'
 ]
 
@@ -52,22 +51,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
-JWT_AUTH = {
-    'JWT_PUBLIC_KEY': open('jwtRS256.key.pub').read(),
-    'JWT_ALGORITHM': 'RS256',
-    'JWT_AUTH_COOKIE': 'JWT'
-}
-
-REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
-    ),
-}
 
 NEOMODEL_NEO4J_BOLT_URL = 'bolt://neo4j:neo4jpass@neo4jdb:7687'
 
