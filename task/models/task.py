@@ -11,6 +11,8 @@ from neomodel import (
 )
 from relations import HasStep, HasTask
 from taskservice.constants import EFFORT_UNITS, STATUS_LIST
+from step import StepModel
+# from user_node import UserNode
 
 
 class TaskModel(StructuredNode):
@@ -34,7 +36,7 @@ class TaskModel(StructuredNode):
     deadline = DateTimeProperty(required=False)
     roles = ArrayProperty(StringProperty(), default=[])
 
-    steps = RelationshipTo('StepModel', 'HasStep', model=HasStep)
+    steps = RelationshipTo(StepModel, 'HasStep', model=HasStep)
 
     def get_graph(self):
         """get all steps of this task
@@ -75,4 +77,4 @@ class TaskInst(TaskModel):
 
     status = StringProperty(default='n', choices=STATUS_LIST)
 
-    users = RelationshipFrom('UserNode', 'HasTask', model=HasTask)
+    users = RelationshipFrom('task.models.user_node.UserNode', 'HasTask', model=HasTask)

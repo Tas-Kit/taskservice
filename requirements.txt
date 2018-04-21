@@ -6,3 +6,4 @@ psycopg2-binary
 neomodel
 django_neomodel
 pillow
+cryptography
