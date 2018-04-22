@@ -11,19 +11,25 @@ from task.models.user_node import UserNode
 # Create your views here.
 
 
-class TaskView(APIView):
+class ServiceView(APIView):
 
     def get_user(self, request):
         uid = request.META['HTTP_COOKIE']
         user = UserNode.get_or_create({'uid': uid})[0]
         return user
 
-    def get(self, request, tid=None):
+
+class TaskListView(ServiceView):
+
+    def get(self, request):
         user = self.get_user(request)
-        if tid is None or tid == '':
-            tasks = user.tasks.all()
-            response = Response([task.__properties__ for task in tasks])
-        else:
-            task = user.tasks.get(tid=tid)
-            response = Response(task.__properties__)
-        return response
+        tasks = user.tasks.all()
+        return Response([task.__properties__ for task in tasks])
+
+
+class TaskDetailView(ServiceView):
+
+    def get(self, request, tid):
+        user = self.get_user(request)
+        task = user.tasks.get(tid=tid)
+        return Response(task.__properties__)

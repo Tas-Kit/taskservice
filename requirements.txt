@@ -7,3 +7,4 @@ neomodel
 django_neomodel
 pillow
 cryptography
+coreapi
