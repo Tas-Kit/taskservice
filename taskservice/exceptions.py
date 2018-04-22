@@ -1,6 +1,6 @@
 from rest_framework.exceptions import APIException
 from rest_framework.views import exception_handler
-from neomodel.exceptions import DoesNotExist
+from neomodel.exceptions import NeomodelException
 from django.http import Http404
 from django.core.exceptions import PermissionDenied
 from settings import logger
@@ -9,7 +9,7 @@ from settings import logger
 def handle_exception(exc, context):
     # Call REST framework's default exception handler first,
     # to get the standard error response.
-    if isinstance(exc, DoesNotExist):
+    if isinstance(exc, NeomodelException):
         exc = APIException(str(exc))
         exc.status_code = 404
     elif not (isinstance(exc, APIException) or
