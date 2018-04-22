@@ -32,10 +32,10 @@ class TaskModel(StructuredNode):
 
     tid = UniqueIdProperty()
     name = StringProperty(required=True)
-    description = StringProperty(required=False)
-    expected_effort_num = FloatProperty(index=False, default=0)
-    expected_effort_unit = StringProperty(default='h', choices=EFFORT_UNITS)
-    deadline = DateTimeProperty(required=False)
+    description = StringProperty()
+    expected_effort_num = FloatProperty()
+    expected_effort_unit = StringProperty(choices=EFFORT_UNITS)
+    deadline = DateTimeProperty()
     roles = ArrayProperty(StringProperty(), default=[])
 
     steps = RelationshipTo(StepModel, 'HasStep', model=HasStep)
