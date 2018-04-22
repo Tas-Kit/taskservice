@@ -9,6 +9,12 @@ class UserNode(StructuredNode):
     tasks = RelationshipTo(TaskInst, HasTask, model=HasTask)
 
     @db.transaction
+    def update_task(self, tid, data):
+        task = self.tasks.get(tid=tid)
+        task.__dict__.update(data)
+        return task.save()
+
+    @db.transaction
     def create_task(self, task_name):
         """create task for a user
 
@@ -24,8 +30,8 @@ class UserNode(StructuredNode):
             'acceptance': 'a'
         }
         self.tasks.connect(task, has_task_param)
-        start = StepInst(name='Start').save()
-        end = StepInst(name='End').save()
+        start = StepInst(name='Start', node_type='s').save()
+        end = StepInst(name='End', node_type='e').save()
         task.steps.connect(start)
         task.steps.connect(end)
         return task

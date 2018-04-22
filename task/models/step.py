@@ -11,7 +11,7 @@ from neomodel import (
 )
 
 from relations import Next
-from taskservice.constants import EFFORT_UNITS, STATUS_LIST
+from taskservice.constants import EFFORT_UNITS, STATUS_LIST, NODE_TYPE
 
 
 class StepModel(StructuredNode):
@@ -26,6 +26,7 @@ class StepModel(StructuredNode):
     pos_y = FloatProperty()
     assignees = ArrayProperty(StringProperty(), default=[])
     reviewers = ArrayProperty(StringProperty(), default=[])
+    node_type = StringProperty(default='n', choices=NODE_TYPE)
 
     nexts = RelationshipTo('StepModel', 'Next', model=Next)
     prevs = RelationshipFrom('StepModel', 'Next', model=Next)

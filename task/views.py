@@ -6,8 +6,8 @@ from __future__ import unicode_literals
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from task.models.user_node import UserNode
-import coreschema
 from taskservice.schemas import Schema, Field
+from task.models.step import StepInst
 # from taskservice.exceptions import handle_exception
 
 # Create your views here.
@@ -24,11 +24,9 @@ class ServiceView(APIView):
 class TaskListView(ServiceView):
     schema = Schema(manual_fields=[
         Field(
-            "task_name",
+            'name',
             method='POST',
             required=True,
-            location="form",
-            schema=coreschema.String()
         ),
     ])
 
@@ -39,14 +37,71 @@ class TaskListView(ServiceView):
 
     def post(self, request):
         user = self.get_user(request)
-        task_name = request.data['task_name']
+        task_name = request.data['name']
         task = user.create_task(task_name)
         return Response(task.__properties__)
 
 
-class TaskDetailView(ServiceView):
+class TaskGraphView(ServiceView):
 
     def get(self, request, tid):
         user = self.get_user(request)
         task = user.tasks.get(tid=tid)
+        steps = task.steps
+        edges = [
+            {
+                'from': step.id,
+                'to': edge.id,
+                'value': step.nexts.relationship(StepInst(id=edge.id)).value
+            }
+            for step in steps
+            for edge in step.nexts
+        ]
+        data = {
+            'nodes': [step.__properties__ for step in steps],
+            'edges': edges
+        }
+        return Response(data)
+
+
+class TaskDetailView(ServiceView):
+    schema = Schema(manual_fields=[
+        Field(
+            'name',
+            method='PUT',
+        ),
+        Field(
+            'status',
+            method='PUT',
+        ),
+        Field(
+            'roles',
+            method='PUT',
+        ),
+        Field(
+            'deadline',
+            method='PUT',
+        ),
+        Field(
+            'expected_effort_unit',
+            method='PUT',
+        ),
+        Field(
+            'expected_effort_num',
+            method='PUT',
+        ),
+        Field(
+            'description',
+            method='PUT',
+        ),
+    ])
+
+    def get(self, request, tid):
+        user = self.get_user(request)
+        task = user.tasks.get(tid=tid)
+        return Response(task.__properties__)
+
+    def put(self, request, tid):
+        user = self.get_user(request)
+        task = user.update_task(tid, request.data)
         return Response(task.__properties__)

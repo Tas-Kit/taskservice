@@ -1,5 +1,5 @@
 from neomodel import StructuredRel, StringProperty, IntegerProperty
-from taskservice.constants import SUPER_ROLES, ACCEPTANCES, NODE_TYPE
+from taskservice.constants import SUPER_ROLES, ACCEPTANCES
 
 
 class HasTask(StructuredRel):
@@ -9,7 +9,7 @@ class HasTask(StructuredRel):
 
 
 class HasStep(StructuredRel):
-    node_type = StringProperty(default='n', choices=NODE_TYPE)
+    pass
 
 
 class Next(StructuredRel):

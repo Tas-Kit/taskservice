@@ -1,5 +1,6 @@
 from rest_framework import schemas
 import coreapi
+import coreschema
 
 
 class Schema(schemas.AutoSchema):
@@ -15,8 +16,8 @@ class Field(coreapi.Field):
                 field_name,
                 method=None,
                 required=False,
-                location=None,
-                schema=None):
+                location="form",
+                schema=coreschema.String()):
         inst = coreapi.Field.__new__(cls,
                                      field_name,
                                      required=required,
