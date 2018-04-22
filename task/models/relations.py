@@ -12,5 +12,5 @@ class HasStep(StructuredRel):
     node_type = StringProperty(default='n', choices=NODE_TYPE)
 
 
-class HasChild(StructuredRel):
+class Next(StructuredRel):
     value = StringProperty(required=False)

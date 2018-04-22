@@ -10,7 +10,7 @@ from neomodel import (
     RelationshipFrom
 )
 
-from relations import HasChild
+from relations import Next
 from taskservice.constants import EFFORT_UNITS, STATUS_LIST
 
 
@@ -27,8 +27,8 @@ class StepModel(StructuredNode):
     assignees = ArrayProperty(StringProperty(), default=[])
     reviewers = ArrayProperty(StringProperty(), default=[])
 
-    children = RelationshipTo('StepModel', 'HasChild', model=HasChild)
-    parents = RelationshipFrom('StepModel', 'HasChild', model=HasChild)
+    nexts = RelationshipTo('StepModel', 'Next', model=Next)
+    prevs = RelationshipFrom('StepModel', 'Next', model=Next)
 
 
 class StepInst(StepModel):
