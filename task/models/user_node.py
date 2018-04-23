@@ -3,7 +3,7 @@ from relationships import HasTask
 from task import TaskInst
 from step import StepInst
 from taskservice.constants import SUPER_ROLE, ACCEPTANCE, NODE_TYPE
-from taskservice.exceptions import NotAdmin, NotAccept, NoSuchRole, AlreadyHasTheTask
+from taskservice.exceptions import NotAdmin, NotAccept, NoSuchRole, AlreadyHasTheTask, OwnerCannotChangeInvitation
 
 
 class UserNode(StructuredNode):
@@ -28,6 +28,10 @@ class UserNode(StructuredNode):
         if user.tasks.is_connected(task):
             raise AlreadyHasTheTask()
 
+    def assert_not_owner(self, has_task):
+        if has_task.super_role == SUPER_ROLE.OWNER:
+            raise OwnerCannotChangeInvitation()
+
     @db.transaction
     def invite(self, tid, uid, role=None):
         task = self.tasks.get(tid=tid)
@@ -40,6 +44,13 @@ class UserNode(StructuredNode):
             'role': role
         }
         user.tasks.connect(task, param)
+
+    def respond_invitation(self, tid, acceptance):
+        task = self.tasks.get(tid=tid)
+        has_task = self.tasks.relationship(task)
+        self.assert_not_owner(has_task)
+        has_task.acceptance = acceptance
+        has_task.save()
 
     @db.transaction
     def update_task(self, tid, data):

@@ -34,6 +34,12 @@ def handle_exception(exc, context):
     return response
 
 
+class OwnerCannotChangeInvitation(APIException):
+    status_code = 400
+    default_detail = 'Bad Request. Task owner cannot change the invitation.'
+    default_code = 'owner_cannot_reject_task'
+
+
 class AlreadyHasTheTask(APIException):
     status_code = 400
     default_detail = 'Bad Request. The user already has the task'

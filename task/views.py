@@ -59,6 +59,11 @@ class TaskInvitationView(ServiceView):
             'role',
             method='POST',
             required=False
+        ),
+        Field(
+            'acceptance',
+            method='PUT',
+            required=True
         )
     ])
 
@@ -69,6 +74,11 @@ class TaskInvitationView(ServiceView):
         if 'role' in request.data:
             role = request.data['role']
         user.invite(tid, uid, role)
+        return Response('SUCCESS')
+
+    @preprocess
+    def put(self, request, user, tid):
+        user.respond_invitation(tid, request.data['acceptance'])
         return Response('SUCCESS')
 
 
