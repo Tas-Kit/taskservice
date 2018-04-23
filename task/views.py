@@ -33,7 +33,10 @@ class TaskListView(ServiceView):
     def get(self, request):
         user = self.get_user(request)
         tasks = user.tasks.all()
-        return Response([task.__properties__ for task in tasks])
+        return Response({
+            task.tid: task.__properties__
+            for task in tasks
+        })
 
     def post(self, request):
         user = self.get_user(request)
@@ -50,15 +53,18 @@ class TaskGraphView(ServiceView):
         steps = task.steps
         edges = [
             {
-                'from': step.id,
-                'to': edge.id,
+                'from': step.sid,
+                'to': edge.sid,
                 'value': step.nexts.relationship(StepInst(id=edge.id)).value
             }
             for step in steps
             for edge in step.nexts
         ]
         data = {
-            'nodes': [step.__properties__ for step in steps],
+            'nodes': {
+                step.sid: step.__properties__
+                for step in steps
+            },
             'edges': edges
         }
         return Response(data)

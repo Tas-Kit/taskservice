@@ -1,35 +1,73 @@
-EFFORT_UNITS = {
-    's': 'second',
-    'm': 'minute',
-    'h': 'hour',
-    'd': 'day',
-    'w': 'week',
-    'M': 'month',
-    'y': 'year'
+from enum import Enum
+
+
+class TIME_UNIT(Enum):
+    SECOND = 's'
+    MINUTE = 'm'
+    HOUR = 'h'
+    DAY = 'd'
+    WEEK = 'w'
+    MONTH = 'M'
+    YEAR = 'y'
+
+TIME_UNITS = {
+    TIME_UNIT.SECOND: 'second',
+    TIME_UNIT.MINUTE: 'minute',
+    TIME_UNIT.HOUR: 'hour',
+    TIME_UNIT.DAY: 'day',
+    TIME_UNIT.WEEK: 'week',
+    TIME_UNIT.MONTH: 'month',
+    TIME_UNIT.YEAR: 'year'
 }
+
+
+class STATUS(Enum):
+    NEW = 'n'
+    IN_PROGRESS = 'ip'
+    READY_FOR_REVIEW = 'rr'
+    COMPLETED = 'c'
+    SKIPPED = 's'
 
 STATUS_LIST = {
-    'n': 'New',
-    'ip': 'In Progress',
-    'rr': 'Ready For Review',
-    'c': 'Complete',
-    's': 'Skipped'
+    STATUS.NEW: 'New',
+    STATUS.IN_PROGRESS: 'In Progress',
+    STATUS.READY_FOR_REVIEW: 'Ready For Review',
+    STATUS.COMPLETED: 'Completed',
+    STATUS.SKIPPED: 'Skipped'
 }
+
+
+class SUPER_ROLE(Enum):
+    OWNER = 10
+    ADMIN = 5
+    STANDARD = 0
 
 SUPER_ROLES = {
-    10: 'Owner',
-    5: 'Admin',
-    0: 'Standard'
+    SUPER_ROLE.OWNER: 'Owner',
+    SUPER_ROLE.ADMIN: 'Admin',
+    SUPER_ROLE.STANDARD: 'Standard'
 }
+
+
+class ACCEPTANCE(Enum):
+    ACCEPT = 'a'
+    REJECT = 'r'
+    WAITING = 'w'
 
 ACCEPTANCES = {
-    'a': 'Accept',
-    'r': 'Reject',
-    'w': 'Waiting',
+    ACCEPTANCE.ACCEPT: 'Accept',
+    ACCEPTANCE.REJECT: 'Reject',
+    ACCEPTANCE.WAITING: 'Waiting',
 }
 
-NODE_TYPE = {
-    's': 'Start',
-    'n': 'Normal',
-    'e': 'End'
+
+class NODE_TYPE(Enum):
+    START = 's'
+    END = 'e'
+    NORMAL = 'n'
+
+NODE_TYPES = {
+    NODE_TYPE.START: 'Start',
+    NODE_TYPE.NORMAL: 'Normal',
+    NODE_TYPE.END: 'End'
 }

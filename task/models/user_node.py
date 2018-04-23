@@ -2,6 +2,7 @@ from neomodel import StructuredNode, StringProperty, RelationshipTo, db
 from relations import HasTask
 from task import TaskInst
 from step import StepInst
+from taskservice.constants import SUPER_ROLE, ACCEPTANCE, NODE_TYPE
 
 
 class UserNode(StructuredNode):
@@ -26,12 +27,12 @@ class UserNode(StructuredNode):
         """
         task = TaskInst(name=task_name).save()
         has_task_param = {
-            'super_role': 10,
-            'acceptance': 'a'
+            'super_role': SUPER_ROLE.OWNER,
+            'acceptance': ACCEPTANCE.ACCEPT
         }
         self.tasks.connect(task, has_task_param)
-        start = StepInst(name='Start', node_type='s').save()
-        end = StepInst(name='End', node_type='e').save()
+        start = StepInst(name='Start', node_type=NODE_TYPE.START).save()
+        end = StepInst(name='End', node_type=NODE_TYPE.END).save()
         task.steps.connect(start)
         task.steps.connect(end)
         return task

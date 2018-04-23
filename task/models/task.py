@@ -11,7 +11,7 @@ from neomodel import (
     RelationshipFrom
 )
 from relations import HasStep, HasTask
-from taskservice.constants import EFFORT_UNITS, STATUS_LIST
+from taskservice.constants import STATUS, TIME_UNITS, STATUS_LIST
 from step import StepModel
 # from user_node import UserNode
 
@@ -34,7 +34,7 @@ class TaskModel(StructuredNode):
     name = StringProperty(required=True)
     description = StringProperty()
     expected_effort_num = FloatProperty()
-    expected_effort_unit = StringProperty(choices=EFFORT_UNITS)
+    expected_effort_unit = StringProperty(choices=TIME_UNITS)
     deadline = DateTimeProperty()
     roles = ArrayProperty(StringProperty(), default=[])
 
@@ -77,6 +77,6 @@ class TaskInst(TaskModel):
         users (TYPE): Description
     """
 
-    status = StringProperty(default='n', choices=STATUS_LIST)
+    status = StringProperty(default=STATUS.NEW, choices=STATUS_LIST)
 
     users = RelationshipFrom('task.models.user_node.UserNode', 'HasTask', model=HasTask)
