@@ -1,7 +1,4 @@
-from enum import Enum
-
-
-class TIME_UNIT(Enum):
+class TIME_UNIT(object):
     SECOND = 's'
     MINUTE = 'm'
     HOUR = 'h'
@@ -21,7 +18,7 @@ TIME_UNITS = {
 }
 
 
-class STATUS(Enum):
+class STATUS(object):
     NEW = 'n'
     IN_PROGRESS = 'ip'
     READY_FOR_REVIEW = 'rr'
@@ -37,7 +34,7 @@ STATUS_LIST = {
 }
 
 
-class SUPER_ROLE(Enum):
+class SUPER_ROLE(object):
     OWNER = 10
     ADMIN = 5
     STANDARD = 0
@@ -49,7 +46,7 @@ SUPER_ROLES = {
 }
 
 
-class ACCEPTANCE(Enum):
+class ACCEPTANCE(object):
     ACCEPT = 'a'
     REJECT = 'r'
     WAITING = 'w'
@@ -61,7 +58,7 @@ ACCEPTANCES = {
 }
 
 
-class NODE_TYPE(Enum):
+class NODE_TYPE(object):
     START = 's'
     END = 'e'
     NORMAL = 'n'
