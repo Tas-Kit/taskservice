@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from task.models.user_node import UserNode
 from taskservice.schemas import Schema, Field
 from task.models.step import StepInst
-# from taskservice.exceptions import handle_exception
+from task.utils import preprocess
 
 # Create your views here.
 
@@ -30,7 +30,8 @@ class TaskListView(ServiceView):
         ),
     ])
 
-    def get(self, request):
+    @preprocess
+    def get(self, request, user):
         user = self.get_user(request)
         return Response({
             task.tid: {
@@ -40,17 +41,41 @@ class TaskListView(ServiceView):
             for task in user.tasks
         })
 
-    def post(self, request):
-        user = self.get_user(request)
+    @preprocess
+    def post(self, request, user):
         task_name = request.data['name']
         task = user.create_task(task_name)
         return Response(task.__properties__)
 
 
+class TaskInvitationView(ServiceView):
+    schema = Schema(manual_fields=[
+        Field(
+            'uid',
+            method='POST',
+            required=True,
+        ),
+        Field(
+            'role',
+            method='POST',
+            required=False
+        )
+    ])
+
+    @preprocess
+    def post(self, request, user, tid):
+        uid = request.data['uid']
+        role = None
+        if 'role' in request.data:
+            role = request.data['role']
+        user.invite(tid, uid, role)
+        return Response('SUCCESS')
+
+
 class TaskGraphView(ServiceView):
 
-    def get(self, request, tid):
-        user = self.get_user(request)
+    @preprocess
+    def get(self, request, user, tid):
         task = user.tasks.get(tid=tid)
         steps = task.steps
         edges = [
@@ -104,12 +129,12 @@ class TaskDetailView(ServiceView):
         ),
     ])
 
-    def get(self, request, tid):
-        user = self.get_user(request)
+    @preprocess
+    def get(self, request, user, tid):
         task = user.tasks.get(tid=tid)
         return Response(task.__properties__)
 
-    def put(self, request, tid):
-        user = self.get_user(request)
+    @preprocess
+    def put(self, request, user, tid):
         task = user.update_task(tid, request.data)
         return Response(task.__properties__)

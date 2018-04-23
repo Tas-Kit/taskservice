@@ -1,5 +1,5 @@
 from django.conf.urls import url
-from task.views import TaskListView, TaskDetailView, TaskGraphView
+from task.views import TaskListView, TaskDetailView, TaskGraphView, TaskInvitationView
 from rest_framework.schemas import get_schema_view
 from taskservice.settings import URLS
 
@@ -10,5 +10,6 @@ urlpatterns = [
     url(r'^task/$', TaskListView.as_view()),
     url(r'^task/(?P<tid>[0-9a-z]*)$', TaskDetailView.as_view()),
     url(r'^task/graph/(?P<tid>[0-9a-z]*)/$', TaskGraphView.as_view()),
+    url(r'^task/invitation/(?P<tid>[0-9a-z]*)/$', TaskInvitationView.as_view()),
     url(r'^schema/$', schema_view),
 ]

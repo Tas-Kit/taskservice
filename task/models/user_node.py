@@ -3,7 +3,7 @@ from relationships import HasTask
 from task import TaskInst
 from step import StepInst
 from taskservice.constants import SUPER_ROLE, ACCEPTANCE, NODE_TYPE
-from taskservice.exceptions import NotAdmin, NotAccept
+from taskservice.exceptions import NotAdmin, NotAccept, NoSuchRole, AlreadyHasTheTask
 
 
 class UserNode(StructuredNode):
@@ -19,6 +19,27 @@ class UserNode(StructuredNode):
         has_task = self.tasks.relationship(task)
         if has_task.acceptance != ACCEPTANCE.ACCEPT:
             raise NotAccept()
+
+    def assert_role(self, task, role):
+        if role is not None and role not in task.roles:
+            raise NoSuchRole(role)
+
+    def assert_not_connected(self, task, user):
+        if user.tasks.is_connected(task):
+            raise AlreadyHasTheTask()
+
+    @db.transaction
+    def invite(self, tid, uid, role=None):
+        task = self.tasks.get(tid=tid)
+        self.assert_admin(task)
+        self.assert_accept(task)
+        self.assert_role(task, role)
+        user = UserNode.get_or_create({'uid': uid})[0]
+        self.assert_not_connected(task, user)
+        param = {
+            'role': role
+        }
+        user.tasks.connect(task, param)
 
     @db.transaction
     def update_task(self, tid, data):
