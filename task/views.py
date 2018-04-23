@@ -32,10 +32,12 @@ class TaskListView(ServiceView):
 
     def get(self, request):
         user = self.get_user(request)
-        tasks = user.tasks.all()
         return Response({
-            task.tid: task.__properties__
-            for task in tasks
+            task.tid: {
+                'task': task.__properties__,
+                'relationship': user.tasks.relationship(task).__properties__
+            }
+            for task in user.tasks
         })
 
     def post(self, request):

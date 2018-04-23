@@ -24,3 +24,15 @@ def handle_exception(exc, context):
         response.data['status_code'] = response.status_code
 
     return response
+
+
+class NotAccept(APIException):
+    status_code = 403
+    default_detail = 'Permission Denied. You need to accept the task before performing this action.'
+    default_code = 'not_accept'
+
+
+class NotAdmin(APIException):
+    status_code = 403
+    default_detail = 'Permission Denied. You need at least admin super role to perform this action.'
+    default_code = 'not_admin'

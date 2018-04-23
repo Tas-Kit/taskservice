@@ -10,7 +10,7 @@ from neomodel import (
     RelationshipFrom
 )
 
-from relations import Next
+from relationships import Next
 from taskservice.constants import NODE_TYPE, STATUS, TIME_UNITS, STATUS_LIST, NODE_TYPES
 
 

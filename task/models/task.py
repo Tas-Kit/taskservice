@@ -10,7 +10,7 @@ from neomodel import (
     RelationshipTo,
     RelationshipFrom
 )
-from relations import HasStep, HasTask
+from relationships import HasStep, HasTask
 from taskservice.constants import STATUS, TIME_UNITS, STATUS_LIST
 from step import StepModel
 # from user_node import UserNode
