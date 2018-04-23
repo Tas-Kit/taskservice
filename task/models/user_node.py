@@ -8,7 +8,7 @@ from taskservice.exceptions import NotAdmin, NotAccept, NoSuchRole, AlreadyHasTh
 
 class UserNode(StructuredNode):
     uid = StringProperty(unique_index=True, required=True)
-    tasks = RelationshipTo(TaskInst, HasTask, model=HasTask)
+    tasks = RelationshipTo(TaskInst, 'HasTask', model=HasTask)
 
     def assert_admin(self, task):
         has_task = self.tasks.relationship(task)

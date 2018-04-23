@@ -9,6 +9,7 @@ from task.models.user_node import UserNode
 from taskservice.schemas import Schema, Field
 from task.models.step import StepInst
 from task.utils import preprocess
+from django.contrib.auth.models import User
 
 # Create your views here.
 
@@ -36,7 +37,7 @@ class TaskListView(ServiceView):
         return Response({
             task.tid: {
                 'task': task.__properties__,
-                'relationship': user.tasks.relationship(task).__properties__
+                'has_task': user.tasks.relationship(task).__properties__
             }
             for task in user.tasks
         })
@@ -88,6 +89,21 @@ class TaskGraphView(ServiceView):
     def get(self, request, user, tid):
         task = user.tasks.get(tid=tid)
         steps = task.steps
+        user_map = {
+            user_node.uid: user_node
+            for user_node in task.users
+        }
+        users = {
+            task_user.id: {
+                'basic': {
+                    'first_name': task_user.first_name,
+                    'last_name': task_user.last_name
+                },
+                'has_task': task.users.relationship(user_map[str(task_user.id)]).__properties__
+            }
+            for task_user in User.objects.filter(pk__in=user_map.keys())
+        }
+
         edges = [
             {
                 'from': step.sid,
@@ -97,12 +113,14 @@ class TaskGraphView(ServiceView):
             for step in steps
             for edge in step.nexts
         ]
+        nodes = {
+            step.sid: step.__properties__
+            for step in steps
+        }
         data = {
-            'nodes': {
-                step.sid: step.__properties__
-                for step in steps
-            },
-            'edges': edges
+            'nodes': nodes,
+            'edges': edges,
+            'users': users
         }
         return Response(data)
 
