@@ -33,7 +33,6 @@ class TaskListView(ServiceView):
 
     @preprocess
     def get(self, request, user):
-        user = self.get_user(request)
         return Response({
             task.tid: {
                 'task': task.__properties__,
@@ -43,10 +42,36 @@ class TaskListView(ServiceView):
         })
 
     @preprocess
-    def post(self, request, user):
-        task_name = request.data['name']
-        task = user.create_task(task_name)
+    def post(self, request, user, name):
+        task = user.create_task(name)
         return Response(task.__properties__)
+
+
+class TaskChangeInvitationView(ServiceView):
+
+    schema = Schema(manual_fields=[
+        Field(
+            'uid',
+            method='POST',
+            required=True,
+        ),
+        Field(
+            'role',
+            method='POST',
+            required=False
+        ),
+        Field(
+            'super_role',
+            method='POST',
+            required=False
+        )
+    ])
+
+    @preprocess
+    def post(self, request, user, task, uid, role=None, super_role=None):
+        target_user = task.users.get(uid=uid)
+        user.change_invitation(task, target_user, role, super_role)
+        return Response('SUCCESS')
 
 
 class TaskInvitationView(ServiceView):
@@ -69,25 +94,21 @@ class TaskInvitationView(ServiceView):
     ])
 
     @preprocess
-    def post(self, request, user, tid):
-        uid = request.data['uid']
-        role = None
-        if 'role' in request.data:
-            role = request.data['role']
-        user.invite(tid, uid, role)
+    def post(self, request, user, task, uid, role=None):
+        target_user = UserNode.get_or_create({'uid': uid})[0]
+        user.invite(task, target_user, role)
         return Response('SUCCESS')
 
     @preprocess
-    def put(self, request, user, tid):
-        user.respond_invitation(tid, request.data['acceptance'])
+    def put(self, request, user, task, acceptance):
+        user.respond_invitation(task, acceptance)
         return Response('SUCCESS')
 
 
 class TaskGraphView(ServiceView):
 
     @preprocess
-    def get(self, request, user, tid):
-        task = user.tasks.get(tid=tid)
+    def get(self, request, user, task):
         steps = task.steps
         user_map = {
             user_node.uid: user_node
@@ -158,11 +179,10 @@ class TaskDetailView(ServiceView):
     ])
 
     @preprocess
-    def get(self, request, user, tid):
-        task = user.tasks.get(tid=tid)
+    def get(self, request, user, task):
         return Response(task.__properties__)
 
     @preprocess
-    def put(self, request, user, tid):
-        task = user.update_task(tid, request.data)
+    def put(self, request, user, task, **data):
+        task = user.update_task(task, data)
         return Response(task.__properties__)
