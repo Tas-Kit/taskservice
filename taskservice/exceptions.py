@@ -75,3 +75,9 @@ class NotAdmin(APIException):
     status_code = 403
     default_detail = 'Permission Denied. You need at least admin super role to perform this action.'
     default_code = 'not_admin'
+
+
+class NotOwner(APIException):
+    status_code = 403
+    default_detail = 'Permission Denied. You need at least owner super role to perform this action.'
+    default_code = 'not_admin'

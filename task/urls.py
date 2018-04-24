@@ -10,7 +10,7 @@ from task.views import (
 from rest_framework.schemas import get_schema_view
 from taskservice.settings import URLS
 
-schema_view = get_schema_view(title='Taskit API v1', url=URLS['base'])
+schema_view = get_schema_view(title='Taskit Tast API v1', url=URLS['base'])
 
 # The API URLs are now determined automatically by the router.
 urlpatterns = [

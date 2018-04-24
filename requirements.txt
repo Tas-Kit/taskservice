@@ -8,3 +8,5 @@ django_neomodel
 pillow
 cryptography
 coreapi
+coverage
+mock

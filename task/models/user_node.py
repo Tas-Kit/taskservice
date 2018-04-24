@@ -3,7 +3,7 @@ from relationships import HasTask
 from task import TaskInst
 from step import StepInst
 from taskservice.constants import SUPER_ROLE, ACCEPTANCE, NODE_TYPE
-from taskservice.exceptions import NotAdmin, NotAccept, NoSuchRole, AlreadyHasTheTask, OwnerCannotChangeInvitation
+from taskservice.exceptions import NotOwner, NotAdmin, NotAccept, AlreadyHasTheTask, OwnerCannotChangeInvitation
 
 
 class UserNode(StructuredNode):
@@ -18,19 +18,15 @@ class UserNode(StructuredNode):
     def assert_owner(self, task):
         has_task = self.tasks.relationship(task)
         if has_task.super_role < SUPER_ROLE.OWNER:
-            raise NotAdmin()
+            raise NotOwner()
 
     def assert_accept(self, task):
         has_task = self.tasks.relationship(task)
         if has_task.acceptance != ACCEPTANCE.ACCEPT:
             raise NotAccept()
 
-    def assert_role(self, task, role):
-        if role is not None and role not in task.roles:
-            raise NoSuchRole(role)
-
-    def assert_not_connected(self, task, user):
-        if user.tasks.is_connected(task):
+    def assert_not_have_task(self, task):
+        if self.tasks.is_connected(task):
             raise AlreadyHasTheTask()
 
     def assert_not_owner(self, has_task):
@@ -57,7 +53,7 @@ class UserNode(StructuredNode):
         self.assert_admin(task)
         self.assert_accept(task)
         task.assert_role(role)
-        self.assert_not_connected(task, user)
+        user.assert_not_have_task(task)
         param = {
             'role': role
         }
