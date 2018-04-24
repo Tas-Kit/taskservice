@@ -67,7 +67,7 @@ class MissingRequiredParam(APIException):
 
 class NotAccept(APIException):
     status_code = 403
-    default_detail = 'Permission Denied. You need to accept the task before performing this action.'
+    default_detail = 'Permission Denied. User needs to accept the task before performing this action.'
     default_code = 'not_accept'
 
 

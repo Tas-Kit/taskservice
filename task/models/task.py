@@ -13,7 +13,7 @@ from neomodel import (
 from relationships import HasStep, HasTask
 from taskservice.constants import STATUS, TIME_UNITS, STATUS_LIST
 from step import StepModel
-# from user_node import UserNode
+from taskservice.exceptions import NoSuchRole
 
 
 class TaskModel(StructuredNode):
@@ -39,6 +39,10 @@ class TaskModel(StructuredNode):
     roles = ArrayProperty(StringProperty(), default=[])
 
     steps = RelationshipTo(StepModel, 'HasStep', model=HasStep)
+
+    def assert_role(self, role):
+        if role is not None and role not in self.roles:
+            raise NoSuchRole(role)
 
     def get_graph(self):
         """get all steps of this task
