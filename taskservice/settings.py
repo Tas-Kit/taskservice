@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 
 import os
 import logging
+from py2neo import Graph
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -70,6 +71,8 @@ URLS = {
 }
 
 NEOMODEL_NEO4J_BOLT_URL = 'bolt://neo4j:neo4jpass@neo4jdb:7687'
+neo4jdb = Graph("bolt://neo4jdb:7687", auth=('neo4j', 'neo4jpass'), password='neo4jpass')
+
 
 ROOT_URLCONF = 'taskservice.urls'
 
