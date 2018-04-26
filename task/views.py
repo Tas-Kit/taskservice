@@ -14,15 +14,7 @@ from django.contrib.auth.models import User
 # Create your views here.
 
 
-class ServiceView(APIView):
-
-    def get_user(self, request):
-        uid = request.META['HTTP_COOKIE']
-        user = UserNode.get_or_create({'uid': uid})[0]
-        return user
-
-
-class TaskListView(ServiceView):
+class TaskListView(APIView):
     schema = Schema(manual_fields=[
         Field(
             'name',
@@ -47,7 +39,7 @@ class TaskListView(ServiceView):
         return Response(task.__properties__)
 
 
-class TaskChangeInvitationView(ServiceView):
+class TaskChangeInvitationView(APIView):
 
     schema = Schema(manual_fields=[
         Field(
@@ -74,7 +66,7 @@ class TaskChangeInvitationView(ServiceView):
         return Response('SUCCESS')
 
 
-class TaskInvitationView(ServiceView):
+class TaskInvitationView(APIView):
     schema = Schema(manual_fields=[
         Field(
             'uid',
@@ -105,7 +97,7 @@ class TaskInvitationView(ServiceView):
         return Response('SUCCESS')
 
 
-class TaskGraphView(ServiceView):
+class TaskGraphView(APIView):
 
     @preprocess
     def get(self, request, user, task):
@@ -146,7 +138,7 @@ class TaskGraphView(ServiceView):
         return Response(data)
 
 
-class TaskDetailView(ServiceView):
+class TaskDetailView(APIView):
     schema = Schema(manual_fields=[
         Field(
             'name',
