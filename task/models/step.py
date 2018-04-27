@@ -37,52 +37,43 @@ class StepModel(StructuredNode):
 
 class StepInst(StepModel):
     status = StringProperty(default=STATUS.NEW, choices=STATUS_LIST)
+    nexts = RelationshipTo('StepInst', 'Next', model=Next)
+    prevs = RelationshipFrom('StepInst', 'Next', model=Next)
 
-    def next(StepModel):
-        self.children.connect(StepModel)
 
     def submit_for_review(self):
         """change the status to submit for review and save
         """
-        self.status = 'rr'
+        self.status = STATUS.READY_FOR_REVIEW
         self.save()
-        
-
-    def get_all_outgoing_nodes(self,node):
-        definition = dict(node_class=StepInst, direction=OUTGOING, relation_type='Next', model=Next)
-        relations_traversal = Traversal(node, StepInst.__label__, definition)
-        outgoingRelations = relations_traversal.all()
-        return outgoingRelations
-
-    def get_all_incoming_nodes(self,node):
-        definition = dict(node_class=StepInst, direction=INCOMING, relation_type='Next', model=Next)
-        relations_traversal = Traversal(node, StepInst.__label__, definition)
-        outgoingRelations = relations_traversal.all()
-        return outgoingRelations
 
     def check_parents_are_completed(self,node):
-        parenstsRelations = self.get_all_incoming_nodes(node)
+        parenstsRelations = node.prevs
         allCompleted = True
         for parent in parenstsRelations:
-            if parent.status != 'c' and parent.status != 's':
+            parent.__class__ = StepInst
+            if parent.status != STATUS.COMPLETED and parent.status != STATUS.SKIPPED:
                 allCompleted = False
             #if parent is skip, find its grandparents
-            if parent.status == 's':
-                if self.check_parents_are_completed() == False:
+            if parent.status == STATUS.SKIPPED:
+                if self.check_parents_are_completed(parent) == False:
                     allCompleted = False
         return allCompleted
-
+    def trigger_next(self, node):
+        for nextNode in node.nexts:
+            nextNode.__class__ = StepInst
+            print self.check_parents_are_completed(nextNode)
+            if nextNode.status == STATUS.SKIPPED:
+                trigger_next(nextNode)
+            elif nextNode.status == STATUS.NEW and self.check_parents_are_completed(nextNode) == True:
+                nextNode.status = STATUS.IN_PROGRESS
+                nextNode.save()
 
     def complete(self):
         """complete a step.
         this one will be a little bit tricky since it may involves a lot of cases
         """
-        self.status = 'c'
+        self.status = STATUS.COMPLETED
         self.save()
-        #find next node
-        outgoingRelations = self.get_all_outgoing_nodes(self)
-        for nextNode in outgoingRelations:
-            if self.check_parents_are_completed(nextNode) == True:
-                nextNode.status = 'ip'
-                nextNode.save()
+        self.trigger_next(self)
 

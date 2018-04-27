@@ -3,7 +3,9 @@ from __future__ import unicode_literals
 
 from django.test import TestCase
 
-from models.step import StepModel, StepInst
+from task.models.step import StepModel, StepInst
+from taskservice.settings import neo4jdb
+
 
 # Create your tests here.
 
