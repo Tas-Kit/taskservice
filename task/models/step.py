@@ -62,9 +62,8 @@ class StepInst(StepModel):
     def trigger_next(self, node):
         for nextNode in node.nexts:
             nextNode.__class__ = StepInst
-            print self.check_parents_are_completed(nextNode)
             if nextNode.status == STATUS.SKIPPED:
-                trigger_next(nextNode)
+                self.trigger_next(nextNode)
             elif nextNode.status == STATUS.NEW and self.check_parents_are_completed(nextNode) == True:
                 nextNode.status = STATUS.IN_PROGRESS
                 nextNode.save()
