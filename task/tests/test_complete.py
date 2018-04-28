@@ -56,9 +56,6 @@ class threeToOneTestCase(TestCase):
 		node4.nexts.connect(node3)
 		node1.nexts.connect(node3)
 		node2.nexts.connect(node3)
-		node1.save()
-		node2.save()
-		node3.save()
 	def testSubmit(self):
 		ps = StepInst.nodes.get(name="PS")
 		ps.complete()
@@ -69,7 +66,7 @@ class threeToOneTestCase(TestCase):
 		submitNode = StepInst.nodes.get(name="Submit")
 		self.assertEqual(submitNode.status, STATUS.IN_PROGRESS)
 
-class twoToSkipandTwoToOneTestCase(TestCase):
+class twoToSkipAndTwoToOneTestCase(TestCase):
 	def sefUp(self):
 		neo4jdb.delete_all()
 		sat = StepInst(name="SAT", status = STATUS.SKIPPED).save()
@@ -81,10 +78,6 @@ class twoToSkipandTwoToOneTestCase(TestCase):
 		ps.nexts.connect(submit)
 		sat2.nexts.connect(sat)
 		toefl.nexts.connect(sat)
-		sat.save()
-		ps.save()
-		sat2.save()
-		toefl.save()
 	def testSubmitSuccess(self):
 		ps = StepInst.nodes.get(name="PS")
 		ps.complete()

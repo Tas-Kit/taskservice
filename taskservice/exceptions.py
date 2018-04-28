@@ -81,3 +81,8 @@ class NotOwner(APIException):
     status_code = 403
     default_detail = 'Permission Denied. You need at least owner super role to perform this action.'
     default_code = 'not_admin'
+
+class CannotComplete(APIException):
+    status_code = 100
+    default_detail = 'Only can change to complete in ready for review or in progress state.'
+    default_code = 'not_admin'
