@@ -8,9 +8,6 @@ from neomodel import (
     UniqueIdProperty,
     RelationshipTo,
     RelationshipFrom,
-    OUTGOING,
-    INCOMING,
-    Traversal
 )
 
 from relationships import Next
@@ -74,7 +71,6 @@ class StepInst(StepModel):
         this one will be a little bit tricky since it may involves a lot of cases
         """
         if(self.status != STATUS.IN_PROGRESS and self.status != STATUS.READY_FOR_REVIEW):
-            print self
             raise CannotComplete
         else:
             self.status = STATUS.COMPLETED

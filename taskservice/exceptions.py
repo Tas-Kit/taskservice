@@ -83,6 +83,6 @@ class NotOwner(APIException):
     default_code = 'not_admin'
 
 class CannotComplete(APIException):
-    status_code = 100
+    status_code = 400
     default_detail = 'Only can change to complete in ready for review or in progress state.'
-    default_code = 'not_admin'
+    default_code = 'cannot_complete'
