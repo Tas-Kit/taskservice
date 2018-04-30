@@ -8,7 +8,9 @@ from task.views import (
 )
 
 from rest_framework.schemas import get_schema_view
-from taskservice.settings import URLS
+from django.conf import settings
+
+URLS = settings.URLS
 
 schema_view = get_schema_view(title='Taskit Tast API v1', url=URLS['base'])
 

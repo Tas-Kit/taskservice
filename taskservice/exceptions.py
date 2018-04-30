@@ -3,7 +3,7 @@ from rest_framework.views import exception_handler
 from neomodel.exceptions import NeomodelException
 from django.http import Http404
 from django.core.exceptions import PermissionDenied
-from settings import logger
+# from settings import logger
 
 
 # def assert_required_params(params, data):

@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 
 import os
 import logging
-from py2neo import Graph
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -21,20 +20,15 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '4en5-g!mfyx*qipadkt2fmowkyt-fj&4%qx#a#td4&b$58_@)9'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', 'proxyserver', 'taskservice']
 
-logger = logging.getLogger('taskservice')
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-fh = logging.FileHandler('taskservice.log')
-fh.setFormatter(formatter)
-logger.addHandler(fh)
-logger.setLevel(logging.DEBUG if DEBUG else logging.WARNING)
+# logger = logging.getLogger('taskservice')
+# formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# fh = logging.FileHandler('taskservice.log')
+# fh.setFormatter(formatter)
+# logger.addHandler(fh)
+# logger.setLevel(logging.DEBUG if DEBUG else logging.WARNING)
 
 # Application definition
 
@@ -69,9 +63,6 @@ MIDDLEWARE = [
 URLS = {
     'base': 'http://localhost:8001/',
 }
-
-NEOMODEL_NEO4J_BOLT_URL = 'bolt://neo4j:neo4jpass@neo4jdb:7687'
-neo4jdb = Graph("bolt://neo4jdb:7687", auth=('neo4j', 'neo4jpass'), password='neo4jpass')
 
 
 ROOT_URLCONF = 'taskservice.urls'
