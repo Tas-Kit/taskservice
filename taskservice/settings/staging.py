@@ -25,6 +25,7 @@ DATABASES = {
     }
 }
 
+ALLOWED_HOSTS.append('sandbox.tas-kit.com')
 NEO4J_AUTH = os.environ['NEO4J_AUTH']
 NEO4J_PASS = NEO4J_AUTH.split(':')[1]
 
