@@ -33,6 +33,6 @@ neo4jdb = Graph("bolt://neo4jdb:7687", auth=('neo4j', NEO4J_PASS), password=NEO4
 
 URLS = {
     'auth': 'http://authserver:8000/',
-    'base': 'https://localhost:10003/',
-    'main': 'https://localhost:10003/main/'
+    'base': 'https://sandbox.tas-kit.com/',
+    'main': 'https://sandbox.tas-kit.com/main/'
 }
