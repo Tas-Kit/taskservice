@@ -25,13 +25,13 @@ class TaskListView(APIView):
 
     @preprocess
     def get(self, request, user):
-        return Response({
-            task.tid: {
+        return Response([
+            {
                 'task': task.__properties__,
                 'has_task': user.tasks.relationship(task).__properties__
             }
             for task in user.tasks
-        })
+        ])
 
     @preprocess
     def post(self, request, user, name):
@@ -126,10 +126,10 @@ class TaskGraphView(APIView):
             for step in steps
             for edge in step.nexts
         ]
-        nodes = {
-            step.sid: step.__properties__
+        nodes = [
+            step.__properties__
             for step in steps
-        }
+        ]
         data = {
             'nodes': nodes,
             'edges': edges,
