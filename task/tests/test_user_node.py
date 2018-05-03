@@ -7,7 +7,15 @@ from taskservice.constants import SUPER_ROLE, ACCEPTANCE, NODE_TYPE
 from task.models.user_node import UserNode
 from task.models.task import TaskInst
 from task.models.relationships import HasTask
-from taskservice.exceptions import NotAdmin, NotOwner, NotAccept, AlreadyHasTheTask, OwnerCannotChangeInvitation, NoSuchRole
+from taskservice.exceptions import (
+    NotAdmin,
+    NotOwner,
+    NotAccept,
+    AlreadyHasTheTask,
+    OwnerCannotChangeInvitation,
+    NoSuchRole,
+    BadRequest
+)
 from taskservice.settings.dev import neo4jdb
 # Create your tests here.
 
@@ -22,6 +30,38 @@ class TestUserNode(TestCase):
     def tearDownClass(cls):
         # neo4jdb.delete_all()
         pass
+
+    @patch('task.models.user_node.UserNode.assert_has_higher_permission')
+    @patch('task.models.user_node.UserNode.assert_accept')
+    @patch('task.models.user_node.UserNode.assert_has_task')
+    def test_delete_invitation(self,
+                               mock_assert_has_task,
+                               mock_assert_accept,
+                               mock_assert_has_higher_permission):
+        user1 = UserNode(uid='user3').save()
+        user2 = UserNode(uid='user4').save()
+        task = user1.create_task('sample task')
+        user2.tasks.connect(task)
+        user1.delete_invitation(task, user2)
+        self.assertEqual(mock_assert_has_task.call_count, 2)
+        mock_assert_has_task.called_with(user1, task)
+        mock_assert_has_task.called_with(user2, task)
+        mock_assert_accept.assert_called_once_with(task)
+        mock_assert_has_higher_permission.assert_called_once_with(task, user2)
+
+    def test_assert_has_task(self):
+        user = UserNode(uid='user node test uid 1').save()
+        task = TaskInst(name='new task').save()
+        with self.assertRaises(BadRequest):
+            user.assert_has_task(task)
+
+    def test_has_higher_permission(self):
+        user1 = UserNode(uid='user1').save()
+        user2 = UserNode(uid='user2').save()
+        task = user1.create_task('sample task')
+        user2.tasks.connect(task, {'acceptance': ACCEPTANCE.ACCEPT})
+        with self.assertRaises(BadRequest):
+            user2.assert_has_higher_permission(task, user1)
 
     def test_create_task(self):
         user = UserNode(uid='user node test uid').save()
@@ -40,7 +80,8 @@ class TestUserNode(TestCase):
         self.assertEqual(NODE_TYPE.END, end.node_type)
 
     @patch('neomodel.StructuredRel.save')
-    @patch('neomodel.RelationshipManager.relationship', return_value=HasTask(super_role=SUPER_ROLE.ADMIN, acceptance=ACCEPTANCE.ACCEPT))
+    @patch('neomodel.RelationshipManager.relationship',
+           return_value=HasTask(super_role=SUPER_ROLE.ADMIN, acceptance=ACCEPTANCE.ACCEPT))
     def test_update_task_success(self, mock_relationship, mock_save):
         user = UserNode()
         task = TaskInst()
@@ -52,14 +93,16 @@ class TestUserNode(TestCase):
         self.assertEqual(data['name'], task.name)
         self.assertEqual(data['description'], task.description)
 
-    @patch('neomodel.RelationshipManager.relationship', return_value=HasTask(super_role=SUPER_ROLE.ADMIN, acceptance=ACCEPTANCE.WAITING))
+    @patch('neomodel.RelationshipManager.relationship',
+           return_value=HasTask(super_role=SUPER_ROLE.ADMIN, acceptance=ACCEPTANCE.WAITING))
     def test_update_task_not_accept(self, mock_relationship):
         user = UserNode()
         task = TaskInst()
         with self.assertRaises(NotAccept):
             user.update_task(task, {})
 
-    @patch('neomodel.RelationshipManager.relationship', return_value=HasTask(super_role=SUPER_ROLE.STANDARD, acceptance=ACCEPTANCE.ACCEPT))
+    @patch('neomodel.RelationshipManager.relationship',
+           return_value=HasTask(super_role=SUPER_ROLE.STANDARD, acceptance=ACCEPTANCE.ACCEPT))
     def test_update_task_not_admin(self, mock_relationship):
         user = UserNode()
         task = TaskInst()
@@ -75,7 +118,8 @@ class TestUserNode(TestCase):
         user.respond_invitation(task, ACCEPTANCE.ACCEPT)
         self.assertEqual(ACCEPTANCE.ACCEPT, mock_has_task.acceptance)
 
-    @patch('neomodel.RelationshipManager.relationship', return_value=HasTask(super_role=SUPER_ROLE.OWNER, acceptance=ACCEPTANCE.ACCEPT))
+    @patch('neomodel.RelationshipManager.relationship',
+           return_value=HasTask(super_role=SUPER_ROLE.OWNER, acceptance=ACCEPTANCE.ACCEPT))
     def test_respond_invitation_owner(self, mock_relationship):
         user = UserNode()
         task = TaskInst()
@@ -133,7 +177,8 @@ class TestUserNode(TestCase):
         self.assertEqual('teacher', mock_user_has_task.role)
         self.assertEqual(SUPER_ROLE.OWNER, mock_user_has_task.super_role)
 
-    @patch('neomodel.RelationshipManager.relationship', return_value=HasTask(super_role=SUPER_ROLE.OWNER, acceptance=ACCEPTANCE.ACCEPT))
+    @patch('neomodel.RelationshipManager.relationship',
+           return_value=HasTask(super_role=SUPER_ROLE.OWNER, acceptance=ACCEPTANCE.ACCEPT))
     def test_change_invitation_has_no_role(self, mock_relationship):
         user = UserNode()
         task = TaskInst()
@@ -141,7 +186,8 @@ class TestUserNode(TestCase):
         with self.assertRaises(NoSuchRole):
             user.change_invitation(task, target_user, role='teacher')
 
-    @patch('neomodel.RelationshipManager.relationship', return_value=HasTask(super_role=SUPER_ROLE.ADMIN, acceptance=ACCEPTANCE.ACCEPT))
+    @patch('neomodel.RelationshipManager.relationship',
+           return_value=HasTask(super_role=SUPER_ROLE.ADMIN, acceptance=ACCEPTANCE.ACCEPT))
     def test_change_invitation_not_owner(self, mock_relationship):
         user = UserNode()
         task = TaskInst()
@@ -151,7 +197,8 @@ class TestUserNode(TestCase):
 
     @patch('neomodel.RelationshipManager.connect')
     @patch('neomodel.RelationshipManager.is_connected', return_value=False)
-    @patch('neomodel.RelationshipManager.relationship', return_value=HasTask(super_role=SUPER_ROLE.ADMIN, acceptance=ACCEPTANCE.ACCEPT))
+    @patch('neomodel.RelationshipManager.relationship',
+           return_value=HasTask(super_role=SUPER_ROLE.ADMIN, acceptance=ACCEPTANCE.ACCEPT))
     def test_invite_success(self, mock_relationship, mock_is_connected, mock_connect):
         user = UserNode()
         target_user = UserNode()
@@ -162,7 +209,8 @@ class TestUserNode(TestCase):
         })
 
     @patch('neomodel.RelationshipManager.is_connected', return_value=True)
-    @patch('neomodel.RelationshipManager.relationship', return_value=HasTask(super_role=SUPER_ROLE.ADMIN, acceptance=ACCEPTANCE.ACCEPT))
+    @patch('neomodel.RelationshipManager.relationship',
+           return_value=HasTask(super_role=SUPER_ROLE.ADMIN, acceptance=ACCEPTANCE.ACCEPT))
     def test_invite_user_already_has_task(self, mock_relationship, mock_is_connected):
         user = UserNode()
         target_user = UserNode()
@@ -170,7 +218,8 @@ class TestUserNode(TestCase):
         with self.assertRaises(AlreadyHasTheTask):
             user.invite(task, target_user, role='teacher')
 
-    @patch('neomodel.RelationshipManager.relationship', return_value=HasTask(super_role=SUPER_ROLE.ADMIN, acceptance=ACCEPTANCE.ACCEPT))
+    @patch('neomodel.RelationshipManager.relationship',
+           return_value=HasTask(super_role=SUPER_ROLE.ADMIN, acceptance=ACCEPTANCE.ACCEPT))
     def test_invite_task_has_no_role(self, mock_relationship):
         user = UserNode()
         target_user = UserNode()
@@ -178,7 +227,8 @@ class TestUserNode(TestCase):
         with self.assertRaises(NoSuchRole):
             user.invite(task, target_user, role='teacher')
 
-    @patch('neomodel.RelationshipManager.relationship', return_value=HasTask(super_role=SUPER_ROLE.ADMIN, acceptance=ACCEPTANCE.WAITING))
+    @patch('neomodel.RelationshipManager.relationship',
+           return_value=HasTask(super_role=SUPER_ROLE.ADMIN, acceptance=ACCEPTANCE.WAITING))
     def test_invite_user_not_accepted(self, mock_relationship):
         user = UserNode()
         target_user = UserNode()

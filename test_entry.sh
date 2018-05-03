@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # pylint --load-plugins pylint_django task
 
 coverage run manage.py test -v 2 

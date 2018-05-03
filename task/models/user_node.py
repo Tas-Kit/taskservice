@@ -77,6 +77,7 @@ class UserNode(StructuredNode):
 
     def delete_invitation(self, task, user):
         self.assert_has_task(task)
+        self.assert_accept(task)
         user.assert_has_task(task)
         self.assert_has_higher_permission(task, user)
         user.tasks.disconnect(task)
