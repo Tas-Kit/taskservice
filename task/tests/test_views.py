@@ -2,13 +2,9 @@
 from __future__ import unicode_literals
 
 from django.test import TestCase
-from task.views import TaskListView
-from mock import patch, MagicMock
-from task.models.relationships import HasTask
 from task.models.task import TaskInst
 from task.models.user_node import UserNode
-from taskservice.constants import SUPER_ROLE
-from taskservice.settings import neo4jdb
+from taskservice.settings.dev import neo4jdb
 # Create your tests here.
 
 

@@ -1,5 +1,6 @@
-from taskservice.exceptions import MissingRequiredParam
+from taskservice.exceptions import MissingRequiredParam, BadRequest
 from task.models.user_node import UserNode
+from django.contrib.auth.models import User
 
 
 def get_user(request):

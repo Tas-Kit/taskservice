@@ -34,6 +34,11 @@ def handle_exception(exc, context):
     return response
 
 
+class BadRequest(APIException):
+    status_code = 400
+    default_code = 'bad_request'
+
+
 class OwnerCannotChangeInvitation(APIException):
     status_code = 400
     default_detail = 'Bad Request. Task owner cannot change the invitation.'
@@ -81,6 +86,7 @@ class NotOwner(APIException):
     status_code = 403
     default_detail = 'Permission Denied. You need at least owner super role to perform this action.'
     default_code = 'not_admin'
+
 
 class CannotComplete(APIException):
     status_code = 400

@@ -10,8 +10,22 @@ from taskservice.schemas import Schema, Field
 from task.models.step import StepInst
 from task.utils import preprocess
 from django.contrib.auth.models import User
-
+from taskservice.exceptions import BadRequest
 # Create your views here.
+
+
+def assert_uid_valid(uid):
+    try:
+        User.objects.get(pk=int(uid))
+    except Exception as e:
+        raise BadRequest(str(e))
+
+
+def get_user_by_username(username):
+    try:
+        return User.objects.get(username=username)
+    except Exception as e:
+        raise BadRequest(str(e))
 
 
 class TaskListView(APIView):
@@ -61,6 +75,7 @@ class TaskChangeInvitationView(APIView):
 
     @preprocess
     def post(self, request, user, task, uid, role=None, super_role=None):
+        assert_uid_valid(uid)
         target_user = task.users.get(uid=uid)
         user.change_invitation(task, target_user, role, super_role)
         return Response('SUCCESS')
@@ -69,7 +84,7 @@ class TaskChangeInvitationView(APIView):
 class TaskInvitationView(APIView):
     schema = Schema(manual_fields=[
         Field(
-            'uid',
+            'username',
             method='POST',
             required=True,
         ),
@@ -86,9 +101,10 @@ class TaskInvitationView(APIView):
     ])
 
     @preprocess
-    def post(self, request, user, task, uid, role=None):
-        target_user = UserNode.get_or_create({'uid': uid})[0]
-        user.invite(task, target_user, role)
+    def post(self, request, user, task, username, role=None):
+        target_user = get_user_by_username(username)
+        target_user_node = UserNode.get_or_create({'uid': target_user.id})[0]
+        user.invite(task, target_user_node, role)
         return Response('SUCCESS')
 
     @preprocess

@@ -8,7 +8,7 @@ from task.models.user_node import UserNode
 from task.models.task import TaskInst
 from task.models.relationships import HasTask
 from taskservice.exceptions import NotAdmin, NotOwner, NotAccept, AlreadyHasTheTask, OwnerCannotChangeInvitation, NoSuchRole
-from taskservice.settings import neo4jdb
+from taskservice.settings.dev import neo4jdb
 # Create your tests here.
 
 
