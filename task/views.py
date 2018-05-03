@@ -8,24 +8,9 @@ from rest_framework.response import Response
 from task.models.user_node import UserNode
 from taskservice.schemas import Schema, Field
 from task.models.step import StepInst
-from task.utils import preprocess
+from task.utils import preprocess, get_user_by_username, assert_uid_valid
 from django.contrib.auth.models import User
-from taskservice.exceptions import BadRequest
 # Create your views here.
-
-
-def assert_uid_valid(uid):
-    try:
-        User.objects.get(pk=int(uid))
-    except Exception as e:
-        raise BadRequest(str(e))
-
-
-def get_user_by_username(username):
-    try:
-        return User.objects.get(username=username)
-    except Exception as e:
-        raise BadRequest(str(e))
 
 
 class TaskListView(APIView):

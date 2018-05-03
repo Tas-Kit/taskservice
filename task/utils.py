@@ -3,6 +3,20 @@ from task.models.user_node import UserNode
 from django.contrib.auth.models import User
 
 
+def assert_uid_valid(uid):
+    try:
+        User.objects.get(pk=int(uid))
+    except Exception as e:
+        raise BadRequest(str(e))
+
+
+def get_user_by_username(username):
+    try:
+        return User.objects.get(username=username)
+    except Exception as e:
+        raise BadRequest(str(e))
+
+
 def get_user(request):
     cookie = request.META['HTTP_COOKIE']
     uid = cookie.replace(' ', '')
