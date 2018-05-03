@@ -3,12 +3,18 @@ from relationships import HasTask
 from task import TaskInst
 from step import StepInst
 from taskservice.constants import SUPER_ROLE, ACCEPTANCE, NODE_TYPE
-from taskservice.exceptions import NotOwner, NotAdmin, NotAccept, AlreadyHasTheTask, OwnerCannotChangeInvitation
+from taskservice.exceptions import NotOwner, NotAdmin, NotAccept, AlreadyHasTheTask, OwnerCannotChangeInvitation, BadRequest
 
 
 class UserNode(StructuredNode):
     uid = StringProperty(unique_index=True, required=True)
     tasks = RelationshipTo(TaskInst, 'HasTask', model=HasTask)
+
+    def assert_has_higher_permission(self, task, user):
+        self_has_task = self.tasks.relationship(task)
+        user_has_task = user.tasks.relationship(task)
+        if self_has_task.super_role <= user_has_task.super_role:
+            raise BadRequest('You do not have enough permission to delete this user')
 
     def assert_admin(self, task):
         has_task = self.tasks.relationship(task)
@@ -24,6 +30,10 @@ class UserNode(StructuredNode):
         has_task = self.tasks.relationship(task)
         if has_task.acceptance != ACCEPTANCE.ACCEPT:
             raise NotAccept()
+
+    def assert_has_task(self, task):
+        if not self.tasks.is_connected(task):
+            raise BadRequest('User has no such task')
 
     def assert_not_have_task(self, task):
         if self.tasks.is_connected(task):
@@ -64,6 +74,12 @@ class UserNode(StructuredNode):
         self.assert_not_owner(has_task)
         has_task.acceptance = acceptance
         has_task.save()
+
+    def delete_invitation(self, task, user):
+        self.assert_has_task(task)
+        user.assert_has_task(task)
+        self.assert_has_higher_permission(task, user)
+        user.tasks.disconnect(task)
 
     @db.transaction
     def update_task(self, task, data):

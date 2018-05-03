@@ -97,6 +97,11 @@ class TaskInvitationView(APIView):
             'acceptance',
             method='PUT',
             required=True
+        ),
+        Field(
+            'uid',
+            method='DELETE',
+            required=True
         )
     ])
 
@@ -110,6 +115,13 @@ class TaskInvitationView(APIView):
     @preprocess
     def put(self, request, user, task, acceptance):
         user.respond_invitation(task, acceptance)
+        return Response('SUCCESS')
+
+    @preprocess
+    def delete(self, request, user, task, uid):
+        assert_uid_valid(uid)
+        target_user = UserNode.get_or_create({'uid': uid})[0]
+        user.delete_invitation(task, target_user)
         return Response('SUCCESS')
 
 
