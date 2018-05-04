@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_neomodel',
     'rest_framework',
-    'task'
+    'task',
+    'rest_framework_tracking',
 ]
 
 REST_FRAMEWORK = {

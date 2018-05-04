@@ -11,3 +11,4 @@ coreapi
 coverage
 mock
 py2neo
+drf-tracking

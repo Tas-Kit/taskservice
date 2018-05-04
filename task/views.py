@@ -11,10 +11,15 @@ from taskservice.constants import SUPER_ROLE
 from task.models.step import StepInst
 from task.utils import preprocess, get_user_by_username, assert_uid_valid
 from django.contrib.auth.models import User
+from rest_framework_tracking.mixins import LoggingMixin
 # Create your views here.
 
 
-class TaskListView(APIView):
+class APILogView(APIView, LoggingMixin):
+    pass
+
+
+class TaskListView(APILogView):
     schema = Schema(manual_fields=[
         Field(
             'name',
@@ -39,7 +44,7 @@ class TaskListView(APIView):
         return Response(task.__properties__)
 
 
-class TaskChangeInvitationView(APIView):
+class TaskChangeInvitationView(APILogView):
 
     schema = Schema(manual_fields=[
         Field(
@@ -67,7 +72,7 @@ class TaskChangeInvitationView(APIView):
         return Response('SUCCESS')
 
 
-class TaskRespondInvitationView(APIView):
+class TaskRespondInvitationView(APILogView):
     schema = Schema(manual_fields=[
         Field(
             'acceptance',
@@ -82,7 +87,7 @@ class TaskRespondInvitationView(APIView):
         return Response('SUCCESS')
 
 
-class TaskRevokeInvitationView(APIView):
+class TaskRevokeInvitationView(APILogView):
     schema = Schema(manual_fields=[
         Field(
             'uid',
@@ -99,7 +104,7 @@ class TaskRevokeInvitationView(APIView):
         return Response('SUCCESS')
 
 
-class TaskInvitationView(APIView):
+class TaskInvitationView(APILogView):
     schema = Schema(manual_fields=[
         Field(
             'username',
@@ -126,7 +131,7 @@ class TaskInvitationView(APIView):
         return Response('SUCCESS')
 
 
-class TaskGraphView(APIView):
+class TaskGraphView(APILogView):
 
     @preprocess
     def get(self, request, user, task):
@@ -168,7 +173,7 @@ class TaskGraphView(APIView):
         return Response(data)
 
 
-class TaskDetailView(APIView):
+class TaskDetailView(APILogView):
     schema = Schema(manual_fields=[
         Field(
             'name',

@@ -20,6 +20,7 @@ class TestTaskListView(TestCase):
         neo4jdb.delete_all()
 
     def setUp(self):
+        User(pk=1).save()
         self.client.cookies['uid'] = '1'
 
     def test_get(self):
@@ -48,6 +49,7 @@ class TestTaskGraphView(TestCase):
         neo4jdb.delete_all()
 
     def setUp(self):
+        User(pk=1).save()
         self.client.cookies['uid'] = '1'
         self.user1_data = {
             'pk': 1,
@@ -121,6 +123,7 @@ class TestTaskDetailView(TestCase):
         neo4jdb.delete_all()
 
     def setUp(self):
+        User(pk=1).save()
         self.client.cookies['uid'] = '1'
         self.user = UserNode(uid='1').save()
         self.task = self.user.create_task('test task')
@@ -149,6 +152,7 @@ class TestTaskInvitationView(TestCase):
         neo4jdb.delete_all()
 
     def setUp(self):
+        User(pk=1).save()
         self.client.cookies['uid'] = '1'
         self.user1 = UserNode(uid='1').save()
         self.user2 = UserNode(uid='2').save()
