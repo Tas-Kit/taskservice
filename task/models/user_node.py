@@ -44,13 +44,14 @@ class UserNode(StructuredNode):
             raise OwnerCannotChangeInvitation()
 
     @db.transaction
-    def invite(self, task, user, role=None):
+    def invite(self, task, user, super_role=SUPER_ROLE.STANDARD, role=None):
         self.assert_admin(task)
         self.assert_accept(task)
         task.assert_role(role)
         user.assert_not_have_task(task)
         param = {
-            'role': role
+            'role': role,
+            'super_role': super_role
         }
         user.tasks.connect(task, param)
 
@@ -75,7 +76,7 @@ class UserNode(StructuredNode):
         has_task.acceptance = acceptance
         has_task.save()
 
-    def delete_invitation(self, task, user):
+    def revoke_invitation(self, task, user):
         self.assert_has_task(task)
         self.assert_accept(task)
         user.assert_has_task(task)
@@ -90,7 +91,7 @@ class UserNode(StructuredNode):
         return task.save()
 
     @db.transaction
-    def create_task(self, task_name):
+    def create_task(self, name):
         """create task for a user
 
         Args:
@@ -99,7 +100,7 @@ class UserNode(StructuredNode):
         Returns:
             TYPE: Description
         """
-        task = TaskInst(name=task_name).save()
+        task = TaskInst(name=name).save()
         has_task_param = {
             'super_role': SUPER_ROLE.OWNER,
             'acceptance': ACCEPTANCE.ACCEPT

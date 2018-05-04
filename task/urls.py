@@ -4,7 +4,9 @@ from task.views import (
     TaskDetailView,
     TaskGraphView,
     TaskInvitationView,
-    TaskChangeInvitationView
+    TaskChangeInvitationView,
+    TaskRespondInvitationView,
+    TaskRevokeInvitationView
 )
 
 from rest_framework.schemas import get_schema_view
@@ -20,6 +22,8 @@ urlpatterns = [
     url(r'^task/(?P<tid>[0-9a-z]*)$', TaskDetailView.as_view()),
     url(r'^task/graph/(?P<tid>[0-9a-z]*)/$', TaskGraphView.as_view()),
     url(r'^task/invitation/(?P<tid>[0-9a-z]*)/$', TaskInvitationView.as_view()),
+    url(r'^task/invitation/revoke/(?P<tid>[0-9a-z]*)/$', TaskRevokeInvitationView.as_view()),
+    url(r'^task/invitation/respond/(?P<tid>[0-9a-z]*)/$', TaskRespondInvitationView.as_view()),
     url(r'^task/invitation/change/(?P<tid>[0-9a-z]*)/$', TaskChangeInvitationView.as_view()),
     url(r'^schema/$', schema_view),
 ]

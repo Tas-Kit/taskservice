@@ -12,7 +12,7 @@ from neomodel import (
 )
 from relationships import HasStep, HasTask
 from taskservice.constants import STATUS, TIME_UNITS, STATUS_LIST
-from step import StepModel
+from step import StepInst
 from taskservice.exceptions import NoSuchRole
 
 
@@ -30,7 +30,6 @@ class TaskModel(StructuredNode):
         steps (TYPE): Description
     """
 
-    tid = UniqueIdProperty()
     name = StringProperty(required=True)
     description = StringProperty()
     expected_effort_num = FloatProperty()
@@ -38,7 +37,7 @@ class TaskModel(StructuredNode):
     deadline = DateTimeProperty()
     roles = ArrayProperty(StringProperty(), default=[])
 
-    steps = RelationshipTo(StepModel, 'HasStep', model=HasStep)
+    steps = RelationshipTo(StepInst, 'HasStep', model=HasStep)
 
     def assert_role(self, role):
         if role is not None and role not in self.roles:
@@ -81,6 +80,6 @@ class TaskInst(TaskModel):
         users (TYPE): Description
     """
 
+    tid = UniqueIdProperty()
     status = StringProperty(default=STATUS.NEW, choices=STATUS_LIST)
-
     users = RelationshipFrom('task.models.user_node.UserNode', 'HasTask', model=HasTask)

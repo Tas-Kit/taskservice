@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from task.models.user_node import UserNode
 from taskservice.schemas import Schema, Field
+from taskservice.constants import SUPER_ROLE
 from task.models.step import StepInst
 from task.utils import preprocess, get_user_by_username, assert_uid_valid
 from django.contrib.auth.models import User
@@ -66,6 +67,38 @@ class TaskChangeInvitationView(APIView):
         return Response('SUCCESS')
 
 
+class TaskRespondInvitationView(APIView):
+    schema = Schema(manual_fields=[
+        Field(
+            'acceptance',
+            method='POST',
+            required=True
+        )
+    ])
+
+    @preprocess
+    def post(self, request, user, task, acceptance):
+        user.respond_invitation(task, acceptance)
+        return Response('SUCCESS')
+
+
+class TaskRevokeInvitationView(APIView):
+    schema = Schema(manual_fields=[
+        Field(
+            'uid',
+            method='POST',
+            required=True
+        )
+    ])
+
+    @preprocess
+    def post(self, request, user, task, uid):
+        assert_uid_valid(uid)
+        target_user = UserNode.get_or_create({'uid': uid})[0]
+        user.revoke_invitation(task, target_user)
+        return Response('SUCCESS')
+
+
 class TaskInvitationView(APIView):
     schema = Schema(manual_fields=[
         Field(
@@ -79,34 +112,17 @@ class TaskInvitationView(APIView):
             required=False
         ),
         Field(
-            'acceptance',
-            method='PUT',
-            required=True
-        ),
-        Field(
-            'uid',
-            method='DELETE',
-            required=True
+            'super_role',
+            method='POST',
+            required=False
         )
     ])
 
     @preprocess
-    def post(self, request, user, task, username, role=None):
+    def post(self, request, user, task, username, super_role=SUPER_ROLE.STANDARD, role=None):
         target_user = get_user_by_username(username)
         target_user_node = UserNode.get_or_create({'uid': target_user.id})[0]
-        user.invite(task, target_user_node, role)
-        return Response('SUCCESS')
-
-    @preprocess
-    def put(self, request, user, task, acceptance):
-        user.respond_invitation(task, acceptance)
-        return Response('SUCCESS')
-
-    @preprocess
-    def delete(self, request, user, task, uid):
-        assert_uid_valid(uid)
-        target_user = UserNode.get_or_create({'uid': uid})[0]
-        user.delete_invitation(task, target_user)
+        user.invite(task, target_user_node, super_role, role)
         return Response('SUCCESS')
 
 
@@ -120,8 +136,9 @@ class TaskGraphView(APIView):
             for user_node in task.users
         }
         users = {
-            task_user.id: {
+            str(task_user.id): {
                 'basic': {
+                    'username': task_user.username,
                     'first_name': task_user.first_name,
                     'last_name': task_user.last_name
                 },

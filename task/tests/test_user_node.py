@@ -34,7 +34,7 @@ class TestUserNode(TestCase):
     @patch('task.models.user_node.UserNode.assert_has_higher_permission')
     @patch('task.models.user_node.UserNode.assert_accept')
     @patch('task.models.user_node.UserNode.assert_has_task')
-    def test_delete_invitation(self,
+    def test_revoke_invitation(self,
                                mock_assert_has_task,
                                mock_assert_accept,
                                mock_assert_has_higher_permission):
@@ -42,7 +42,7 @@ class TestUserNode(TestCase):
         user2 = UserNode(uid='user4').save()
         task = user1.create_task('sample task')
         user2.tasks.connect(task)
-        user1.delete_invitation(task, user2)
+        user1.revoke_invitation(task, user2)
         self.assertEqual(mock_assert_has_task.call_count, 2)
         mock_assert_has_task.called_with(user1, task)
         mock_assert_has_task.called_with(user2, task)
@@ -205,7 +205,8 @@ class TestUserNode(TestCase):
         task = TaskInst(roles=['teacher'])
         user.invite(task, target_user, role='teacher')
         mock_connect.assert_called_once_with(task, {
-            'role': 'teacher'
+            'role': 'teacher',
+            'super_role': SUPER_ROLE.STANDARD
         })
 
     @patch('neomodel.RelationshipManager.is_connected', return_value=True)
