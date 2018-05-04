@@ -172,31 +172,31 @@ class TaskDetailView(APIView):
     schema = Schema(manual_fields=[
         Field(
             'name',
-            method='PUT',
+            method='PATCH',
         ),
         Field(
             'status',
-            method='PUT',
+            method='PATCH',
         ),
         Field(
             'roles',
-            method='PUT',
+            method='PATCH',
         ),
         Field(
             'deadline',
-            method='PUT',
+            method='PATCH',
         ),
         Field(
             'expected_effort_unit',
-            method='PUT',
+            method='PATCH',
         ),
         Field(
             'expected_effort_num',
-            method='PUT',
+            method='PATCH',
         ),
         Field(
             'description',
-            method='PUT',
+            method='PATCH',
         ),
     ])
 
@@ -205,6 +205,6 @@ class TaskDetailView(APIView):
         return Response(task.__properties__)
 
     @preprocess
-    def put(self, request, user, task, **data):
+    def patch(self, request, user, task, **data):
         task = user.update_task(task, data)
         return Response(task.__properties__)

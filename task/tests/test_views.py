@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.test import TestCase
+from json import dumps
 from task.models.user_node import UserNode
 from task.models.step import StepInst
 from taskservice.settings.dev import neo4jdb
@@ -111,6 +112,34 @@ class TestTaskGraphView(TestCase):
             'to': self.end_step.sid,
             'value': None
         }, edges)
+
+
+class TestTaskDetailView(TestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        neo4jdb.delete_all()
+
+    def setUp(self):
+        self.client.cookies['uid'] = '1'
+        self.user = UserNode(uid='1').save()
+        self.task = self.user.create_task('test task')
+        self.url = '{0}{1}/'.format(api_url, self.task.tid)
+
+    def tearDown(self):
+        self.user.delete()
+        self.task.delete()
+
+    def test_get(self):
+        response = self.client.get(self.url)
+        self.assertEqual(self.task.__properties__, response.data)
+
+    def test_update(self):
+        self.task.name = 'new task'
+        response = self.client.patch(self.url, content_type='application/json', data=dumps({
+            'name': 'new task'
+        }))
+        self.assertEqual(self.task.__properties__, response.data)
 
 
 class TestTaskInvitationView(TestCase):
