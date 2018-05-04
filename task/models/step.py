@@ -45,8 +45,6 @@ class StepInst(StepModel):
         parenstsRelations = node.prevs
         allCompleted = True
         for parent in parenstsRelations:
-            parent = StepInst(id=parent.id)
-            parent.refresh()
 
             # if parent is skip, find its grandparents
             if parent.status == STATUS.SKIPPED:
@@ -58,8 +56,6 @@ class StepInst(StepModel):
 
     def trigger_next(self, node):
         for nextNode in node.nexts:
-            nextNode = StepInst(id=nextNode.id)
-            nextNode.refresh()
             if nextNode.status == STATUS.SKIPPED:
                 self.trigger_next(nextNode)
             elif nextNode.status == STATUS.NEW and self.check_parents_are_completed(nextNode) is True:
