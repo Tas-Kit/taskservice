@@ -15,11 +15,7 @@ from rest_framework_tracking.mixins import LoggingMixin
 # Create your views here.
 
 
-class APILogView(APIView, LoggingMixin):
-    pass
-
-
-class TaskListView(APILogView):
+class TaskListView(LoggingMixin, APIView):
     schema = Schema(manual_fields=[
         Field(
             'name',
@@ -44,7 +40,7 @@ class TaskListView(APILogView):
         return Response(task.__properties__)
 
 
-class TaskChangeInvitationView(APILogView):
+class TaskChangeInvitationView(LoggingMixin, APIView):
 
     schema = Schema(manual_fields=[
         Field(
@@ -72,7 +68,7 @@ class TaskChangeInvitationView(APILogView):
         return Response('SUCCESS')
 
 
-class TaskRespondInvitationView(APILogView):
+class TaskRespondInvitationView(LoggingMixin, APIView):
     schema = Schema(manual_fields=[
         Field(
             'acceptance',
@@ -87,7 +83,7 @@ class TaskRespondInvitationView(APILogView):
         return Response('SUCCESS')
 
 
-class TaskRevokeInvitationView(APILogView):
+class TaskRevokeInvitationView(LoggingMixin, APIView):
     schema = Schema(manual_fields=[
         Field(
             'uid',
@@ -104,7 +100,7 @@ class TaskRevokeInvitationView(APILogView):
         return Response('SUCCESS')
 
 
-class TaskInvitationView(APILogView):
+class TaskInvitationView(LoggingMixin, APIView):
     schema = Schema(manual_fields=[
         Field(
             'username',
@@ -131,7 +127,7 @@ class TaskInvitationView(APILogView):
         return Response('SUCCESS')
 
 
-class TaskGraphView(APILogView):
+class TaskGraphView(LoggingMixin, APIView):
 
     @preprocess
     def get(self, request, user, task):
@@ -173,7 +169,7 @@ class TaskGraphView(APILogView):
         return Response(data)
 
 
-class TaskDetailView(APILogView):
+class TaskDetailView(LoggingMixin, APIView):
     schema = Schema(manual_fields=[
         Field(
             'name',
