@@ -15,6 +15,20 @@ from rest_framework_tracking.mixins import LoggingMixin
 # Create your views here.
 
 
+class UserView(LoggingMixin, APIView):
+
+    @preprocess
+    def get(self, request, user):
+        u = User.objects.get(pk=user.uid)
+        return Response({
+            'uid': user.uid,
+            'email': u.email,
+            'username': u.username,
+            'first_name': u.first_name,
+            'last_name': u.last_name
+        })
+
+
 class TaskListView(LoggingMixin, APIView):
     schema = Schema(manual_fields=[
         Field(
