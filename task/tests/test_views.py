@@ -87,12 +87,12 @@ class TestTaskGraphView(TestCase):
         users = response.data['users']
         del self.user1_data['pk']
         del self.user2_data['pk']
-        self.assertEqual(self.user1_data, users[self.user1.uid]['basic'])
-        self.assertEqual(self.user2_data, users[self.user2.uid]['basic'])
-        self.assertEqual(self.start_step.__properties__, nodes[self.start_step.sid])
-        self.assertEqual(self.end_step.__properties__, nodes[self.end_step.sid])
-        self.assertEqual(self.step1.__properties__, nodes[self.step1.sid])
-        self.assertEqual(self.step2.__properties__, nodes[self.step2.sid])
+        self.assertIn(dumps(self.user1_data), dumps(users))
+        self.assertIn(dumps(self.user2_data), dumps(users))
+        self.assertIn(self.start_step.__properties__, nodes)
+        self.assertIn(self.end_step.__properties__, nodes)
+        self.assertIn(self.step1.__properties__, nodes)
+        self.assertIn(self.step2.__properties__, nodes)
         self.assertEqual(4, len(edges))
         self.assertIn({
             'from': self.start_step.sid,

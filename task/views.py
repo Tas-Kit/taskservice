@@ -145,42 +145,7 @@ class TaskGraphView(LoggingMixin, APIView):
 
     @preprocess
     def get(self, request, user, task):
-        steps = task.steps
-        user_map = {
-            user_node.uid: user_node
-            for user_node in task.users
-        }
-        users = {
-            str(task_user.id): {
-                'basic': {
-                    'username': task_user.username,
-                    'first_name': task_user.first_name,
-                    'last_name': task_user.last_name
-                },
-                'has_task': task.users.relationship(user_map[str(task_user.id)]).__properties__
-            }
-            for task_user in User.objects.filter(pk__in=user_map.keys())
-        }
-
-        edges = [
-            {
-                'from': step.sid,
-                'to': edge.sid,
-                'value': step.nexts.relationship(StepInst(id=edge.id)).value
-            }
-            for step in steps
-            for edge in step.nexts
-        ]
-        nodes = {
-            step.sid: step.__properties__
-            for step in steps
-        }
-        data = {
-            'nodes': nodes,
-            'edges': edges,
-            'users': users
-        }
-        return Response(data)
+        return Response(task.get_graph())
 
 
 class TaskDetailView(LoggingMixin, APIView):

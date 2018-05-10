@@ -3,15 +3,8 @@ from rest_framework.views import exception_handler
 from neomodel.exceptions import NeomodelException
 from django.http import Http404
 from django.core.exceptions import PermissionDenied
+import os
 # from settings import logger
-
-
-# def assert_required_params(params, data):
-#     for param in params:
-#         if param not in data:
-#             exc = MissingRequiredParam()
-#             exc.default_detail = exc.default_detail.format(param)
-#             raise exc
 
 
 def handle_exception(exc, context):
@@ -20,11 +13,12 @@ def handle_exception(exc, context):
     if isinstance(exc, NeomodelException):
         exc = APIException(str(exc))
         exc.status_code = 404
-    # elif not (isinstance(exc, APIException) or
-    #           isinstance(exc, Http404) or
-    #           isinstance(exc, PermissionDenied)):
-    #     logger.error('Unhandled Exception: {0}'.format(str(exc)))
-    #     exc = APIException('Internal Server Error: '.format(str(exc), code=500))
+    elif not (isinstance(exc, APIException) or
+              isinstance(exc, Http404) or
+              isinstance(exc, PermissionDenied)) and \
+            'dev' not in os.environ('DJANGO_SETTINGS_MODULE'):
+        # logger.error('Unhandled Exception: {0}'.format(str(exc)))
+        exc = APIException('Internal Server Error: '.format(str(exc), code=500))
     response = exception_handler(exc, {})
 
     # Now add the HTTP status code to the response.
@@ -90,5 +84,5 @@ class NotOwner(APIException):
 
 class CannotComplete(APIException):
     status_code = 400
-    default_detail = 'Only can change to complete in ready for review or in progress state.'
+    default_detail = 'Bad Request. This step cannot be triggered.'
     default_code = 'cannot_complete'

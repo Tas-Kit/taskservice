@@ -2,152 +2,201 @@
 from __future__ import unicode_literals
 
 from django.test import TestCase
-
+from mock import patch
 from task.models.step import StepInst
 from taskservice.settings.dev import neo4jdb
 from taskservice.constants import STATUS
+from taskservice.exceptions import CannotComplete
 
 
 # Create your tests here.
+class TestStepTrigger(TestCase):
 
-class CreateNodeTestCase(TestCase):
+    @patch('task.models.step.StepInst.submit_for_review')
+    def test_submit_for_review(self, mock_submit_for_review):
+        node = StepInst(name='hello')
+        node.assignees = ['student']
+        node.reviewers = ['teacher']
+        node.status = STATUS.IN_PROGRESS
+        node.trigger('student')
+        mock_submit_for_review.assert_called_once()
+
+    @patch('task.models.step.StepInst.complete')
+    def test_no_reviewer(self, mock_complete):
+        node = StepInst(name='hello')
+        node.assignees = ['student']
+        node.status = STATUS.IN_PROGRESS
+        node.trigger('student')
+        mock_complete.assert_called_once()
+
+    @patch('task.models.step.StepInst.complete')
+    def test_complete(self, mock_complete):
+        node = StepInst(name='hello')
+        node.assignees = ['student']
+        node.reviewers = ['teacher']
+        node.status = STATUS.READY_FOR_REVIEW
+        node.trigger('teacher')
+        mock_complete.assert_called_once()
+
+    def test_status_not_correct(self):
+        node = StepInst(name='hello')
+        node.assignees = ['student']
+        node.reviewers = ['teacher']
+        with self.assertRaises(CannotComplete):
+            node.trigger('student')
+
+    def test_in_progress_not_assignee(self):
+        node = StepInst(name='hello')
+        node.reviewers = ['teacher']
+        node.status = STATUS.IN_PROGRESS
+        with self.assertRaises(CannotComplete):
+            node.trigger('student')
+
+    def test_ready_for_review_not_reviewer(self):
+        node = StepInst(name='hello')
+        node.status = STATUS.READY_FOR_REVIEW
+        with self.assertRaises(CannotComplete):
+            node.trigger('teacher')
+
+
+class TestCreateNode(TestCase):
 
     def setUp(self):
         neo4jdb.delete_all()
-        node = StepInst(name="world")
+        node = StepInst(name='world')
         node.save()
 
-    def testGetNodeName(self):
-        node = StepInst.nodes.get(name="world")
+    def test_get_node_name(self):
+        node = StepInst.nodes.get(name='world')
         node.submit_for_review()
         self.assertEqual(node.status, STATUS.READY_FOR_REVIEW)
         node.delete()
 
 
-class changeToNew(TestCase):
+class TestChangeToNew(TestCase):
 
     def setUp(Self):
         neo4jdb.delete_all()
-        node2 = StepInst(name="PS", status=STATUS.READY_FOR_REVIEW).save()
-        node3 = StepInst(name="Submit", status=STATUS.NEW).save()
+        node2 = StepInst(name='PS', status=STATUS.READY_FOR_REVIEW).save()
+        node3 = StepInst(name='Submit', status=STATUS.NEW).save()
         node2.nexts.connect(node3)
 
-    def testSubmit(self):
-        ps = StepInst.nodes.get(name="PS")
+    def test_submit(self):
+        ps = StepInst.nodes.get(name='PS')
         ps.complete()
-        submit = StepInst.nodes.get(name="Submit")
+        submit = StepInst.nodes.get(name='Submit')
         self.assertEqual(submit.status, STATUS.IN_PROGRESS)
 
 
-class changeToReady(TestCase):
+class TesthangeToReady(TestCase):
 
     def setUp(Self):
         neo4jdb.delete_all()
-        node2 = StepInst(name="PS", status=STATUS.READY_FOR_REVIEW).save()
-        node3 = StepInst(name="Submit", status=STATUS.READY_FOR_REVIEW).save()
+        node2 = StepInst(name='PS', status=STATUS.READY_FOR_REVIEW).save()
+        node3 = StepInst(name='Submit', status=STATUS.READY_FOR_REVIEW).save()
         node2.nexts.connect(node3)
 
-    def testSubmit(self):
-        ps = StepInst.nodes.get(name="PS")
+    def test_submit(self):
+        ps = StepInst.nodes.get(name='PS')
         ps.complete()
-        submit = StepInst.nodes.get(name="Submit")
+        submit = StepInst.nodes.get(name='Submit')
         self.assertEqual(submit.status, STATUS.READY_FOR_REVIEW)
 
 
-class threeToOneTestCase(TestCase):
+class TestThreeToOne(TestCase):
 
     def setUp(self):
         neo4jdb.delete_all()
-        node1 = StepInst(name="SAT", status=STATUS.READY_FOR_REVIEW).save()
-        node2 = StepInst(name="PS", status=STATUS.READY_FOR_REVIEW).save()
-        node3 = StepInst(name="Submit", status=STATUS.NEW).save()
-        node4 = StepInst(name="Toefl", status=STATUS.COMPLETED).save()
+        node1 = StepInst(name='SAT', status=STATUS.READY_FOR_REVIEW).save()
+        node2 = StepInst(name='PS', status=STATUS.READY_FOR_REVIEW).save()
+        node3 = StepInst(name='Submit', status=STATUS.NEW).save()
+        node4 = StepInst(name='Toefl', status=STATUS.COMPLETED).save()
         node4.nexts.connect(node3)
         node1.nexts.connect(node3)
         node2.nexts.connect(node3)
 
-    def testSubmit(self):
-        ps = StepInst.nodes.get(name="PS")
+    def test_submit(self):
+        ps = StepInst.nodes.get(name='PS')
         ps.complete()
-        submitNode = StepInst.nodes.get(name="Submit")
+        submitNode = StepInst.nodes.get(name='Submit')
         self.assertEqual(submitNode.status, STATUS.NEW)
-        sat = StepInst.nodes.get(name="SAT")
+        sat = StepInst.nodes.get(name='SAT')
         sat.complete()
-        submitNode = StepInst.nodes.get(name="Submit")
+        submitNode = StepInst.nodes.get(name='Submit')
         self.assertEqual(submitNode.status, STATUS.IN_PROGRESS)
 
 
-class twoToSkipAndTwoToOneTestCase(TestCase):
+class TestTwoToSkipAndTwoToOne(TestCase):
 
     def setUp(self):
         neo4jdb.delete_all()
-        sat = StepInst(name="SAT", status=STATUS.SKIPPED).save()
-        ps = StepInst(name="PS", status=STATUS.READY_FOR_REVIEW).save()
-        submit = StepInst(name="Submit", status=STATUS.NEW).save()
-        toefl = StepInst(name="TOEFL", status=STATUS.COMPLETED).save()
-        sat2 = StepInst(name="SAT2", status=STATUS.COMPLETED).save()
+        sat = StepInst(name='SAT', status=STATUS.SKIPPED).save()
+        ps = StepInst(name='PS', status=STATUS.READY_FOR_REVIEW).save()
+        submit = StepInst(name='Submit', status=STATUS.NEW).save()
+        toefl = StepInst(name='TOEFL', status=STATUS.COMPLETED).save()
+        sat2 = StepInst(name='SAT2', status=STATUS.COMPLETED).save()
         sat.nexts.connect(submit)
         ps.nexts.connect(submit)
         sat2.nexts.connect(sat)
         toefl.nexts.connect(sat)
 
-    def testSubmitSuccess(self):
-        ps = StepInst.nodes.get(name="PS")
+    def test_submit_success(self):
+        ps = StepInst.nodes.get(name='PS')
         ps.complete()
-        submit = StepInst.nodes.get(name="Submit")
+        submit = StepInst.nodes.get(name='Submit')
         self.assertEqual(submit.status, STATUS.IN_PROGRESS)
 
 
-class completeToSkipAndTwoToOne(TestCase):
+class TestCompleteToSkipAndTwoToOne(TestCase):
 
     def setUp(self):
         neo4jdb.delete_all()
-        sat = StepInst(name="SAT", status=STATUS.SKIPPED).save()
-        sat2 = StepInst(name="SAT2", status=STATUS.COMPLETED).save()
-        ps = StepInst(name="PS", status=STATUS.READY_FOR_REVIEW).save()
-        submit = StepInst(name="Submit", status=STATUS.NEW).save()
+        sat = StepInst(name='SAT', status=STATUS.SKIPPED).save()
+        sat2 = StepInst(name='SAT2', status=STATUS.COMPLETED).save()
+        ps = StepInst(name='PS', status=STATUS.READY_FOR_REVIEW).save()
+        submit = StepInst(name='Submit', status=STATUS.NEW).save()
         sat2.nexts.connect(sat)
         sat.nexts.connect(submit)
         ps.nexts.connect(submit)
 
-    def testSubmitSuccess(self):
-        ps = StepInst.nodes.get(name="PS")
+    def test_submit_success(self):
+        ps = StepInst.nodes.get(name='PS')
         ps.complete()
-        submit = StepInst.nodes.get(name="Submit")
+        submit = StepInst.nodes.get(name='Submit')
         self.assertEqual(submit.status, STATUS.IN_PROGRESS)
 
 
-class readyToSkipAndTwoToOne(TestCase):
+class TestReadyToSkipAndTwoToOne(TestCase):
 
     def setUp(self):
         neo4jdb.delete_all()
-        sat = StepInst(name="SAT", status=STATUS.SKIPPED).save()
-        sat2 = StepInst(name="SAT2", status=STATUS.READY_FOR_REVIEW).save()
-        ps = StepInst(name="PS", status=STATUS.READY_FOR_REVIEW).save()
-        submit = StepInst(name="Submit", status=STATUS.NEW).save()
+        sat = StepInst(name='SAT', status=STATUS.SKIPPED).save()
+        sat2 = StepInst(name='SAT2', status=STATUS.READY_FOR_REVIEW).save()
+        ps = StepInst(name='PS', status=STATUS.READY_FOR_REVIEW).save()
+        submit = StepInst(name='Submit', status=STATUS.NEW).save()
         sat2.nexts.connect(sat)
         sat.nexts.connect(submit)
         ps.nexts.connect(submit)
 
-    def testSubmitSuccess(self):
-        ps = StepInst.nodes.get(name="PS")
+    def test_submit_success(self):
+        ps = StepInst.nodes.get(name='PS')
         ps.complete()
-        submit = StepInst.nodes.get(name="Submit")
+        submit = StepInst.nodes.get(name='Submit')
         self.assertEqual(submit.status, STATUS.NEW)
 
 
-class changeToSkipToNew(TestCase):
+class TestChangeToSkipToNew(TestCase):
 
     def setUp(self):
         neo4jdb.delete_all()
-        sat = StepInst(name="SAT", status=STATUS.SKIPPED).save()
-        ps = StepInst(name="PS", status=STATUS.READY_FOR_REVIEW).save()
-        submit = StepInst(name="Submit", status=STATUS.NEW).save()
+        sat = StepInst(name='SAT', status=STATUS.SKIPPED).save()
+        ps = StepInst(name='PS', status=STATUS.READY_FOR_REVIEW).save()
+        submit = StepInst(name='Submit', status=STATUS.NEW).save()
         ps.nexts.connect(sat)
         sat.nexts.connect(submit)
 
-    def testSubmitSuccess(self):
-        ps = StepInst.nodes.get(name="PS")
+    def test_submit_success(self):
+        ps = StepInst.nodes.get(name='PS')
         ps.complete()
-        submit = StepInst.nodes.get(name="Submit")
+        submit = StepInst.nodes.get(name='Submit')
         self.assertEqual(submit.status, STATUS.IN_PROGRESS)
