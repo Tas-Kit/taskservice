@@ -13,6 +13,7 @@ from neomodel import (
 from relationships import Next
 from taskservice.constants import NODE_TYPE, STATUS, TIME_UNITS, STATUS_LIST, NODE_TYPES
 from taskservice.exceptions import CannotComplete
+from relationships import HasStep
 
 
 class StepModel(StructuredNode):
@@ -27,6 +28,7 @@ class StepModel(StructuredNode):
     assignees = ArrayProperty(StringProperty(), default=[])
     reviewers = ArrayProperty(StringProperty(), default=[])
     node_type = StringProperty(default=NODE_TYPE.NORMAL, choices=NODE_TYPES)
+    task = RelationshipFrom('task.models.task.TaskInst', 'HasStep', model=HasStep)
 
 
 class StepInst(StepModel):
@@ -36,7 +38,10 @@ class StepInst(StepModel):
     status = StringProperty(default=STATUS.NEW, choices=STATUS_LIST)
 
     def trigger(self, role):
-        if self.status == STATUS.IN_PROGRESS and role in self.assignees:
+        if self.node_type == NODE_TYPE.START and self.status == STATUS.NEW:
+            self.task.get().start()
+            self.complete()
+        elif self.status == STATUS.IN_PROGRESS and role in self.assignees:
             if self.reviewers:
                 self.submit_for_review()
             else:
@@ -64,11 +69,11 @@ class StepInst(StepModel):
                 all_completed = False
         return all_completed
 
-    def trigger_next(self, node):
-        for next_node in node.nexts:
+    def trigger_next(self):
+        for next_node in self.nexts:
             if next_node.status == STATUS.SKIPPED or \
                     next_node.status == STATUS.COMPLETED:
-                self.trigger_next(next_node)
+                next_node.trigger_next()
             elif next_node.status == STATUS.NEW and self.check_parents_are_completed(next_node) is True:
                 next_node.status = STATUS.IN_PROGRESS
                 next_node.save()
@@ -79,4 +84,7 @@ class StepInst(StepModel):
         """
         self.status = STATUS.COMPLETED
         self.save()
-        self.trigger_next(self)
+        if self.node_type == NODE_TYPE.END:
+            self.task.get().complete()
+        else:
+            self.trigger_next()

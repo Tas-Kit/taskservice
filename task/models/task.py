@@ -44,6 +44,14 @@ class TaskModel(StructuredNode):
         if role is not None and role not in self.roles:
             raise NoSuchRole(role)
 
+    def start(self):
+        self.status = STATUS.IN_PROGRESS
+        self.save()
+
+    def complete(self):
+        self.status = STATUS.COMPLETED
+        self.save()
+
     def get_graph(self):
         steps = self.steps
         user_map = {

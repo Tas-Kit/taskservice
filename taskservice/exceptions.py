@@ -16,7 +16,7 @@ def handle_exception(exc, context):
     elif not (isinstance(exc, APIException) or
               isinstance(exc, Http404) or
               isinstance(exc, PermissionDenied)) and \
-            'dev' not in os.environ('DJANGO_SETTINGS_MODULE'):
+            'dev' not in os.environ['DJANGO_SETTINGS_MODULE']:
         # logger.error('Unhandled Exception: {0}'.format(str(exc)))
         exc = APIException('Internal Server Error: '.format(str(exc), code=500))
     response = exception_handler(exc, {})
