@@ -151,6 +151,11 @@ class TaskGraphView(LoggingMixin, APIView):
             'edges',
             method='PATCH',
             required=True,
+        ),
+        Field(
+            'task_info',
+            method='PATCH',
+            required=False,
         )
     ])
 
@@ -159,11 +164,11 @@ class TaskGraphView(LoggingMixin, APIView):
         return Response(task.get_graph())
 
     @preprocess
-    def patch(self, request, user, task, nodes, edges):
+    def patch(self, request, user, task, nodes, edges, task_info=None):
         user.assert_admin(task)
         user.assert_accept(task)
-        task.save_graph(nodes, edges)
-        return Response('SUCCESS')
+        task.save_graph(nodes, edges, task_info)
+        return Response(task.get_graph())
 
 
 class TaskDetailView(LoggingMixin, APIView):

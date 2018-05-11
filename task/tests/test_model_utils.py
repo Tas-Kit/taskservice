@@ -76,9 +76,9 @@ class Test_Model_Utils(TestCase):
         }], self.nodes)
 
     def test_get_sid_edge_sets(self):
-        sid_set, edge_set = utils.get_sid_edge_sets(self.nodes, self.edges)
-        self.assertEqual(set(['sid123', 'sid321']), sid_set)
-        self.assertEqual(set([('sid123', 'sid321')]), edge_set)
+        sids, edges = utils.get_sid_edge_sets(self.nodes, self.edges)
+        self.assertEqual(['sid123', 'sid321'], sids)
+        self.assertEqual([('sid123', 'sid321')], edges)
 
     def test_get_edge_map(self):
         node_map, edge_map = utils.get_node_edge_map(self.nodes, self.edges)

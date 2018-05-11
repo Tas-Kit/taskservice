@@ -140,8 +140,41 @@ class TaskModel(StructuredNode):
             to_node = self.steps.get(sid=to_sid)
             from_node.nexts.connect(to_node)
 
+    def update_step_roles(self, roles):
+        roles = set(roles)
+        for step in self.steps.all():
+            reviewers = set(step.reviewers)
+            step.reviewers = list(reviewers - roles)
+            assignees = set(step.assignees)
+            step.assignees = list(assignees - roles)
+            step.save()
+
+    def update_user_roles(self, roles):
+        for user in self.users.all():
+            has_task = user.has_task.relationship(self)
+            if has_task.role in roles:
+                has_task.role = None
+                has_task.save()
+
+    def update_roles(self, old_roles):
+        _, _, remove_roles = utils.set_diff(self.roles, old_roles)
+        self.update_step_roles(remove_roles)
+        self.update_user_roles(remove_roles)
+
+    def update(self, task_info):
+        if task_info:
+            if 'id' in task_info:
+                del task_info['id']
+            if 'tid' in task_info:
+                del task_info['tid']
+            old_roles = self.roles
+            for key in task_info:
+                setattr(self, key, task_info[key])
+            self.update_roles(old_roles)
+            self.save()
+
     @db.transaction
-    def save_graph(self, nodes, edges):
+    def save_graph(self, nodes, edges, task_info=None):
         """save all the step data
 
         Args:
@@ -151,12 +184,12 @@ class TaskModel(StructuredNode):
             TYPE: Description
         """
         utils.assert_start_end(nodes)
-        new_sid_set, new_edge_set = utils.get_sid_edge_sets(nodes, edges)
+        new_sids, new_edges = utils.get_sid_edge_sets(nodes, edges)
         data = self.get_graph()
-        old_sid_set, old_edge_set = utils.get_sid_edge_sets(data['nodes'], data['edges'])
+        old_sids, old_edges = utils.get_sid_edge_sets(data['nodes'], data['edges'])
 
-        add_edges, change_edges, remove_edges = utils.set_diff(new_edge_set, old_edge_set)
-        add_sids, change_sids, remove_sids = utils.set_diff(new_sid_set, old_sid_set)
+        add_edges, change_edges, remove_edges = utils.set_diff(new_edges, old_edges)
+        add_sids, change_sids, remove_sids = utils.set_diff(new_sids, old_sids)
 
         node_map, edge_map = utils.get_node_edge_map(nodes, edges)
 
@@ -166,6 +199,7 @@ class TaskModel(StructuredNode):
         self.change_nodes(change_sids, node_map)
         sid_map = self.add_nodes(add_sids, node_map)
         self.add_edges(add_edges, sid_map)
+        self.update(task_info)
 
 
 class TaskInst(TaskModel):

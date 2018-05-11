@@ -10,7 +10,77 @@ from taskservice.constants import STATUS
 
 class TestTask(TestCase):
 
-    # @patch('neomodel.db.transaction')
+    @patch('neomodel.StructuredNode.save')
+    @patch('task.models.task.TaskModel.update_roles')
+    def test_update(self, mock_update_roles, mock_save):
+        task_info = {
+            'id': 'test id',
+            'tid': 'test tid',
+            'name': 'new task',
+            'description': 'new description',
+            'roles': ['role1', 'role2']
+        }
+        task = TaskInst(roles=['role2', 'role3'])
+        task.update(task_info)
+        self.assertEqual('new task', task.name)
+        self.assertEqual('new description', task.description)
+        self.assertEqual(['role1', 'role2'], task.roles)
+        self.assertFalse(hasattr(task, 'id'))
+        self.assertNotEqual('test tid', task.tid)
+        mock_save.assert_called_once()
+        mock_update_roles.assert_called_once_with(['role2', 'role3'])
+
+    @patch('neomodel.StructuredNode.save')
+    def test_update_step_roles(self, mock_save):
+        task = TaskInst()
+        step1 = StepInst(assignees=['role1', 'role2'],
+                         reviewers=['role3', 'role4'])
+        step2 = StepInst(assignees=['role2', 'role3'],
+                         reviewers=['role2', 'role4'])
+        task.steps.all = MagicMock(return_value=[step1, step2])
+        roles = ['role2', 'role4']
+        task.update_step_roles(roles)
+        self.assertEqual(['role1'], step1.assignees)
+        self.assertEqual(['role3'], step1.reviewers)
+        self.assertEqual(['role3'], step2.assignees)
+        self.assertEqual([], step2.reviewers)
+        self.assertEqual(2, mock_save.call_count)
+
+    def test_update_user_roles(self):
+        task = TaskInst()
+        user1 = MagicMock()
+        user2 = MagicMock()
+        user1_has_task = MagicMock()
+        user1_has_task.role = 'role1'
+        user2_has_task = MagicMock()
+        user2_has_task.role = 'role2'
+        user1.has_task.relationship = MagicMock(
+            return_value=user1_has_task)
+        user2.has_task.relationship = MagicMock(
+            return_value=user2_has_task)
+        task.users.all = MagicMock(return_value=[user1, user2])
+        task.update_user_roles(['role2', 'role3'])
+        self.assertEqual('role1', user1_has_task.role)
+        self.assertEqual(None, user2_has_task.role)
+        user1_has_task.save.assert_not_called()
+        user2_has_task.save.assert_called_once()
+
+    @patch('task.models.task.TaskModel.update_user_roles')
+    @patch('task.models.task.TaskModel.update_step_roles')
+    @patch('task.models.utils.set_diff',
+           return_value=(MagicMock(),
+                         MagicMock(),
+                         MagicMock()))
+    def test_update_roles(self,
+                          mock_set_diff,
+                          mock_update_step_roles,
+                          mock_update_user_roles):
+        task = TaskInst()
+        task.update_roles({})
+        mock_set_diff.assert_called_once()
+        mock_update_user_roles.assert_called_once()
+        mock_update_user_roles.assert_called_once()
+
     @patch('task.models.task.TaskModel.add_nodes', return_value=MagicMock())
     @patch('task.models.task.TaskModel.add_edges')
     @patch('task.models.task.TaskModel.change_nodes')

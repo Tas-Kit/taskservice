@@ -15,6 +15,7 @@ def assert_start_end(nodes):
 
 
 def set_diff(s1, s2):
+    s1, s2 = set(s1), set(s2)
     return s1 - s2, s1 & s2, s2 - s1
 
 
@@ -26,9 +27,9 @@ def remove_ids(nodes):
 
 def get_sid_edge_sets(nodes, edges):
     remove_ids(nodes)
-    sid_set = set([node['sid'] for node in nodes])
-    edge_set = set([(edge['from'], edge['to']) for edge in edges])
-    return sid_set, edge_set
+    sids = [node['sid'] for node in nodes]
+    edges = [(edge['from'], edge['to']) for edge in edges]
+    return sids, edges
 
 
 def get_node_edge_map(nodes, edges):

@@ -158,7 +158,7 @@ class TestTaskGraphView(TestCase):
             api_url, self.task.tid),
             content_type='application/json',
             data=dumps(data))
-        self.assertEquals('SUCCESS', response.data)
+        self.assertEquals(200, response.status_code)
         start = self.task.steps.get(node_type=NODE_TYPE.START)
         self.assertEqual(self.start_step.sid, start.sid)
         self.assertEqual(self.start_step.id, start.id)
