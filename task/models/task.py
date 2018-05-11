@@ -15,8 +15,7 @@ from taskservice.constants import STATUS, TIME_UNITS, STATUS_LIST, NODE_TYPE
 from step import StepInst
 from django.contrib.auth.models import User
 from taskservice.exceptions import NoSuchRole
-from dictdiffer import diff, patch, swap, revert
-from pprint import pprint
+from dictdiffer import diff
 
 
 class TaskModel(StructuredNode):
@@ -52,7 +51,32 @@ class TaskModel(StructuredNode):
         Returns:
             TYPE: Description
         """
-        return None
+        data = task.get_graph()
+        edge_list = data['edges']
+        node_dict = data['nodes']
+        task_copy = TaskModel(name=self.name + '_copy')
+        sid_map = {}
+        for key, value in node_dict.iteritems():
+            oldSid = value['sid']
+            del value['id']
+            del value['sid']
+            value.status = STATUS.NEW
+            value.name = value.name + '_copy'
+            node = StepInst(**value)
+            task_copy.steps.connect(node)
+            sid_map[oldSid] = node.sid
+        form_edge(edge_list, sid_map)
+        return task_copy
+
+    def form_edge(self, edge_list, sid_map):
+        for edge in edge_list:
+            incomingNode = self.steps.get_or_none(sid=edge["from"])
+            outgoingNode = self.steps.get_or_none(sid=edge["to"])
+            if incomingNode is None:
+                incomingNode = self.steps.get(sid=sid_map[edge["from"]])
+            if outgoingNode is None:
+                outgoingNode = self.steps.get(sid=sid_map[edge["to"]])
+            incomingNode.nexts.connect(outgoingNode)
 
     def get_graph(self):
         steps = self.steps
@@ -119,8 +143,6 @@ class TaskModel(StructuredNode):
                 nodeDict[nodeSID]["id"] = node.id
                 nodeDict[nodeSID]["sid"] = node.sid
                 node = StepInst(**nodeDict[nodeSID]).save()
-                node.refresh()
-                node.save()
             elif changeType == 'add':
                 nodeDataList = item[2]
                 for nodeDataItem in nodeDataList:

@@ -109,3 +109,46 @@ class SaveGraphTestCase(TestCase):
         # test update
         self.assertEqual(self.new_task.steps.get_or_none(
             name="Start").pos_x, 5.0)
+
+
+class CloneGraphTestCase(TestCase):
+
+    def setUp(self):
+        neo4jdb.delete_all()
+        self.task = TaskInst(name='test').save()
+        self.start = StepInst(
+            name='Start',
+            node_type=NODE_TYPE.START,
+            sid="1",
+            pos_x="5").save()
+        self.end = StepInst(
+            name='End',
+            node_type=NODE_TYPE.END,
+            sid="2").save()
+        self.sat = StepInst(name="sat", sid="3").save()
+        self.ps = StepInst(name="ps", sid="4").save()
+        self.submit = StepInst(name="submit", sid="5").save()
+
+        self.task.steps.connect(self.start)
+        self.task.steps.connect(self.end)
+        self.task.steps.connect(self.ps)
+        self.task.steps.connect(self.submit)
+        self.task.steps.connect(self.sat)
+
+        self.start.nexts.connect(self.ps)
+        self.ps.nexts.connect(self.submit)
+        self.submit.nexts.connect(self.end)
+        self.sat.nexts.connect(self.submit)
+
+    def cloneTest(self):
+        self.new_task = self.task.clone_graph()
+        self.assertEqual(self.new_task.steps.get_or_none(
+            name="sat").name, "sat")
+        self.assertEqual(self.new_task.steps.get_or_none(
+            name="sat").nexts.get_or_none(name="submit").name, "submit")
+        self.assertEqual(self.new_task.steps.get_or_none(
+            name="submit").nexts.get_or_none(name="End").name, "End")
+        self.assertEqual(self.new_task.steps.get_or_none(
+            name="Start").nexts.get_or_none(name="ps").name, "ps")
+        self.assertEqual(self.new_task.steps.get_or_none(
+            name="ps").nexts.get_or_none(name="submit").name, "submit")
