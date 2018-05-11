@@ -8,7 +8,6 @@ from rest_framework.response import Response
 from task.models.user_node import UserNode
 from taskservice.schemas import Schema, Field
 from taskservice.constants import SUPER_ROLE
-from task.models.step import StepInst
 from task.utils import preprocess, get_user_by_username, assert_uid_valid
 from django.contrib.auth.models import User
 from rest_framework_tracking.mixins import LoggingMixin
@@ -142,10 +141,29 @@ class TaskInvitationView(LoggingMixin, APIView):
 
 
 class TaskGraphView(LoggingMixin, APIView):
+    schema = Schema(manual_fields=[
+        Field(
+            'nodes',
+            method='PATCH',
+            required=True,
+        ),
+        Field(
+            'edges',
+            method='PATCH',
+            required=True,
+        )
+    ])
 
     @preprocess
     def get(self, request, user, task):
         return Response(task.get_graph())
+
+    @preprocess
+    def patch(self, request, user, task, nodes, edges):
+        user.assert_admin(task)
+        user.assert_accept(task)
+        task.save_graph(nodes, edges)
+        return Response('SUCCESS')
 
 
 class TaskDetailView(LoggingMixin, APIView):

@@ -8,10 +8,12 @@ from neomodel import (
     ArrayProperty,
     UniqueIdProperty,
     RelationshipTo,
-    RelationshipFrom
+    RelationshipFrom,
+    db
 )
 from relationships import HasStep, HasTask
 from taskservice.constants import STATUS, TIME_UNITS, STATUS_LIST
+import utils
 from step import StepInst
 from taskservice.exceptions import NoSuchRole
 from django.contrib.auth.models import User
@@ -95,7 +97,51 @@ class TaskModel(StructuredNode):
         """
         return None
 
-    def save_graph(self, data):
+    def remove_edges(self, edges):
+        for from_sid, to_sid in edges:
+            self.steps.get(sid=from_sid).nexts.disconnect(self.steps.get(sid=to_sid))
+
+    def remove_nodes(self, sids):
+        for sid in sids:
+            node = self.steps.get(sid=sid)
+            node.delete()
+
+    def change_edges(self, edges, edge_map):
+        for from_sid, to_sid in edges:
+            from_node = self.steps.get(sid=from_sid)
+            to_node = self.steps.get(sid=to_sid)
+            edge = from_node.nexts.relationship(to_node)
+            edge_data = edge_map[from_sid + '->' + to_sid]
+            if 'value' in edge_data:
+                edge.value = edge_data['value']
+                edge.save()
+
+    def change_nodes(self, sids, node_map):
+        for sid in sids:
+            node = self.steps.get(sid=sid)
+            node.update(node_map[sid])
+
+    def add_nodes(self, sids, node_map):
+        sid_map = {}
+        for sid in sids:
+            node = StepInst()
+            node.update(node_map[sid])
+            self.steps.connect(node)
+            sid_map[sid] = node.sid
+        return sid_map
+
+    def add_edges(self, edges, sid_map):
+        for from_sid, to_sid in edges:
+            if from_sid in sid_map:
+                from_sid = sid_map[from_sid]
+            if to_sid in sid_map:
+                to_sid = sid_map[to_sid]
+            from_node = self.steps.get(sid=from_sid)
+            to_node = self.steps.get(sid=to_sid)
+            from_node.nexts.connect(to_node)
+
+    @db.transaction
+    def save_graph(self, nodes, edges):
         """save all the step data
 
         Args:
@@ -104,7 +150,22 @@ class TaskModel(StructuredNode):
         Returns:
             TYPE: Description
         """
-        return None
+        utils.assert_start_end(nodes)
+        new_sid_set, new_edge_set = utils.get_sid_edge_sets(nodes, edges)
+        data = self.get_graph()
+        old_sid_set, old_edge_set = utils.get_sid_edge_sets(data['nodes'], data['edges'])
+
+        add_edges, change_edges, remove_edges = utils.set_diff(new_edge_set, old_edge_set)
+        add_sids, change_sids, remove_sids = utils.set_diff(new_sid_set, old_sid_set)
+
+        node_map, edge_map = utils.get_node_edge_map(nodes, edges)
+
+        self.remove_edges(remove_edges)
+        self.remove_nodes(remove_sids)
+        self.change_edges(change_edges, edge_map)
+        self.change_nodes(change_sids, node_map)
+        sid_map = self.add_nodes(add_sids, node_map)
+        self.add_edges(add_edges, sid_map)
 
 
 class TaskInst(TaskModel):

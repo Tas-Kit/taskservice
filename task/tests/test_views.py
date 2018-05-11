@@ -80,6 +80,106 @@ class TestTaskGraphView(TestCase):
         self.task.steps.connect(self.step1)
         self.task.steps.connect(self.step2)
 
+    def tearDown(self):
+        self.user1.delete()
+        self.user2.delete()
+        self.task.delete()
+        self.start_step.delete()
+        self.step1.delete()
+        self.step2.delete()
+        self.end_step.delete()
+
+    def test_save_graph_not_authorized(self):
+        data = {
+            'nodes': [],
+            'edges': []
+        }
+        self.client.cookies['uid'] = 2
+        response = self.client.patch('{0}graph/{1}/'.format(
+            api_url, self.task.tid),
+            content_type='application/json',
+            data=dumps(data))
+        self.assertEqual(403, response.status_code)
+
+    def test_save_graph(self):
+        nodes = [
+            {
+                'name': 'Start',
+                'node_type': NODE_TYPE.START,
+                'sid': self.start_step.sid,
+                'id': self.start_step.id
+            },
+            {
+                'name': 'node 2',
+                'id': self.step2.id,
+                'sid': self.step2.sid,
+                'description': 'description 2'
+            },
+            {
+                'name': 'node 3',
+                'id': '3',
+                'sid': 'sid3',
+                'description': 'description 3'
+            },
+            {
+                'name': 'End',
+                'id': self.end_step.id,
+                'sid': self.end_step.sid,
+                'node_type': NODE_TYPE.END
+            }
+        ]
+        edges = [
+            {
+                'from': self.start_step.sid,
+                'to': self.step2.sid,
+                'value': 'value 1'
+            },
+            {
+                'from': self.start_step.sid,
+                'to': 'sid3',
+                'value': 'value 2'
+            },
+            {
+                'from': self.step2.sid,
+                'to': self.end_step.sid,
+                'value': 'value 3'
+            },
+            {
+                'from': 'sid3',
+                'to': self.end_step.sid,
+                'value': 'value 4'
+            },
+        ]
+        data = {
+            'nodes': nodes,
+            'edges': edges
+        }
+        response = self.client.patch('{0}graph/{1}/'.format(
+            api_url, self.task.tid),
+            content_type='application/json',
+            data=dumps(data))
+        self.assertEquals('SUCCESS', response.data)
+        start = self.task.steps.get(node_type=NODE_TYPE.START)
+        self.assertEqual(self.start_step.sid, start.sid)
+        self.assertEqual(self.start_step.id, start.id)
+        self.assertEqual('Start', start.name)
+        node2 = start.nexts.get(name='node 2')
+        self.assertEqual('node 2', node2.name)
+        self.assertEqual('description 2', node2.description)
+        self.assertEqual(self.step2.sid, node2.sid)
+        self.assertEqual(self.step2.id, node2.id)
+        node3 = start.nexts.get(name='node 3')
+        self.assertEqual('node 3', node3.name)
+        self.assertEqual('description 3', node3.description)
+        self.assertNotEqual(self.step1.sid, node3.sid)
+        self.assertNotEqual(self.step1.id, node3.id)
+        end = node2.nexts.get()
+        self.assertEqual(end, node3.nexts.get())
+        self.assertEqual('End', end.name)
+        self.assertEqual(NODE_TYPE.END, end.node_type)
+        self.assertEqual(self.end_step.sid, end.sid)
+        self.assertEqual(self.end_step.id, end.id)
+
     def test_get_graph(self):
         response = self.client.get('{0}graph/{1}/'.format(api_url, self.task.tid))
         nodes = response.data['nodes']

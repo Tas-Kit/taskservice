@@ -37,6 +37,12 @@ class StepInst(StepModel):
     sid = UniqueIdProperty()
     status = StringProperty(default=STATUS.NEW, choices=STATUS_LIST)
 
+    def update(self, data):
+        for key in data:
+            if key != 'sid' and key != 'id':
+                setattr(self, key, data[key])
+        self.save()
+
     def trigger(self, role):
         if self.node_type == NODE_TYPE.START and self.status == STATUS.NEW:
             self.task.get().start()
