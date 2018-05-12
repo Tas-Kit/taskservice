@@ -84,11 +84,15 @@ class UserNode(StructuredNode):
         user.tasks.disconnect(task)
 
     @db.transaction
-    def update_task(self, task, data):
+    def delete_task(self, task):
+        self.assert_owner(task)
+        task.delete()
+
+    @db.transaction
+    def update_task(self, task, task_info):
         self.assert_admin(task)
         self.assert_accept(task)
-        task.__dict__.update(data)
-        return task.save()
+        task.update(task_info)
 
     @db.transaction
     def create_task(self, name, task_info=None):

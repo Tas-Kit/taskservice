@@ -46,6 +46,11 @@ class TaskModel(StructuredNode):
         if role is not None and role not in self.roles:
             raise NoSuchRole(role)
 
+    def delete(self):
+        for step in self.steps:
+            step.delete()
+        super(TaskModel, self).delete()
+
     def start(self):
         self.status = STATUS.IN_PROGRESS
         self.save()
@@ -151,7 +156,7 @@ class TaskModel(StructuredNode):
 
     def update_user_roles(self, roles):
         for user in self.users.all():
-            has_task = user.has_task.relationship(self)
+            has_task = user.tasks.relationship(self)
             if has_task.role in roles:
                 has_task.role = None
                 has_task.save()

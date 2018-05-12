@@ -33,12 +33,31 @@ class TaskListView(LoggingMixin, APIView):
         Field(
             'name',
             method='POST',
-            required=True,
+            required=True
         ),
         Field(
-            'task_info',
+            'status',
             method='POST',
-            required=False,
+        ),
+        Field(
+            'roles',
+            method='POST',
+        ),
+        Field(
+            'deadline',
+            method='POST',
+        ),
+        Field(
+            'expected_effort_unit',
+            method='POST',
+        ),
+        Field(
+            'expected_effort_num',
+            method='POST',
+        ),
+        Field(
+            'description',
+            method='POST',
         ),
     ])
 
@@ -53,8 +72,8 @@ class TaskListView(LoggingMixin, APIView):
         })
 
     @preprocess
-    def post(self, request, user, name, task_info=None):
-        task = user.create_task(name, task_info)
+    def post(self, request, user, **task_info):
+        task = user.create_task(task_info['name'], task_info)
         return Response(task.__properties__)
 
 
@@ -213,6 +232,11 @@ class TaskDetailView(LoggingMixin, APIView):
         return Response(task.__properties__)
 
     @preprocess
-    def patch(self, request, user, task, **data):
-        task = user.update_task(task, data)
+    def patch(self, request, user, task, **task_info):
+        user.update_task(task, task_info)
         return Response(task.__properties__)
+
+    @preprocess
+    def delete(self, request, user, task):
+        user.delete_task(task)
+        return Response('SUCCESS')

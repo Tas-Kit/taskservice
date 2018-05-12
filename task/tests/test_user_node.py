@@ -63,6 +63,15 @@ class TestUserNode(TestCase):
         with self.assertRaises(BadRequest):
             user2.assert_has_higher_permission(task, user1)
 
+    @patch('task.models.task.TaskModel.delete')
+    @patch('task.models.user_node.UserNode.assert_owner')
+    def test_delete_task(self, mock_assert_owner, mock_delete):
+        user = UserNode()
+        task = TaskInst()
+        user.delete_task(task)
+        mock_assert_owner.assert_called_once()
+        mock_delete.assert_called_once()
+
     def test_create_task(self):
         user = UserNode(uid='user node test uid').save()
         task = user.create_task('sample task')
@@ -79,10 +88,10 @@ class TestUserNode(TestCase):
         self.assertEqual(NODE_TYPE.START, start.node_type)
         self.assertEqual(NODE_TYPE.END, end.node_type)
 
-    @patch('neomodel.StructuredRel.save')
-    @patch('neomodel.RelationshipManager.relationship',
-           return_value=HasTask(super_role=SUPER_ROLE.ADMIN, acceptance=ACCEPTANCE.ACCEPT))
-    def test_update_task_success(self, mock_relationship, mock_save):
+    @patch('task.models.user_node.UserNode.assert_accept')
+    @patch('task.models.user_node.UserNode.assert_admin')
+    @patch('task.models.task.TaskInst.update')
+    def test_update_task_success(self, mock_update, mock_assert_admin, mock_assert_accept):
         user = UserNode()
         task = TaskInst()
         data = {
@@ -90,8 +99,9 @@ class TestUserNode(TestCase):
             'description': 'task description'
         }
         user.update_task(task, data)
-        self.assertEqual(data['name'], task.name)
-        self.assertEqual(data['description'], task.description)
+        mock_update.assert_called_once()
+        mock_assert_admin.assert_called_once()
+        mock_assert_accept.assert_called_once()
 
     @patch('neomodel.RelationshipManager.relationship',
            return_value=HasTask(super_role=SUPER_ROLE.ADMIN, acceptance=ACCEPTANCE.WAITING))

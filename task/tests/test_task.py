@@ -10,6 +10,15 @@ from taskservice.constants import STATUS
 
 class TestTask(TestCase):
 
+    @patch('neomodel.StructuredNode.delete')
+    def test_delete(self, mock_delete):
+        task = TaskInst()
+        mock_step = MagicMock()
+        task.steps = [mock_step] * 2
+        task.delete()
+        self.assertEqual(2, mock_step.delete.call_count)
+        mock_delete.assert_called_once()
+
     @patch('neomodel.StructuredNode.save')
     @patch('task.models.task.TaskModel.update_roles')
     def test_update(self, mock_update_roles, mock_save):
@@ -57,9 +66,9 @@ class TestTask(TestCase):
         user1_has_task.role = 'role1'
         user2_has_task = MagicMock()
         user2_has_task.role = 'role2'
-        user1.has_task.relationship = MagicMock(
+        user1.tasks.relationship = MagicMock(
             return_value=user1_has_task)
-        user2.has_task.relationship = MagicMock(
+        user2.tasks.relationship = MagicMock(
             return_value=user2_has_task)
         task.users.all = MagicMock(return_value=[user1, user2])
         task.update_user_roles(['role2', 'role3'])
