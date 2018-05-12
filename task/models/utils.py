@@ -1,3 +1,4 @@
+from datetime import datetime
 from taskservice.exceptions import BadRequest
 from taskservice.constants import NODE_TYPE
 
@@ -12,6 +13,12 @@ def assert_start_end(nodes):
                 end += 1
     if start != 1 or end != 1:
         raise BadRequest('Bad graph. Expect 1 start node and 1 end node in the graph')
+
+
+def update_datetime(obj, key, task_info):
+    time = task_info[key]
+    setattr(obj, key, datetime.strptime(time, '%Y-%m-%dT%H:%M:%S.%fZ'))
+    del task_info[key]
 
 
 def set_diff(s1, s2):

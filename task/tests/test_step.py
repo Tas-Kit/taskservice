@@ -2,11 +2,32 @@
 from __future__ import unicode_literals
 
 from django.test import TestCase
-from mock import patch
+from mock import patch, MagicMock
 from task.models.step import StepInst
 from taskservice.settings.dev import neo4jdb
-from taskservice.constants import STATUS
+from taskservice.constants import STATUS, NODE_TYPE
 from taskservice.exceptions import CannotComplete
+
+
+class TestStep(TestCase):
+
+    @patch('neomodel.StructuredNode.save')
+    def test_update(self, mock_save):
+        t = '2018-05-12T21:54:43.562037Z'
+        data = {
+            'id': '123',
+            'sid': 'sid123',
+            'deadline': t,
+            'name': 'new step',
+            'description': 'new description'
+        }
+        step = StepInst()
+        step.update(data)
+        self.assertEqual('new step', step.name)
+        self.assertEqual('new description', step.description)
+        self.assertEqual(t, step.deadline.isoformat() + 'Z')
+        self.assertNotIn('id', data)
+        self.assertNotIn('sid', data)
 
 
 # Create your tests here.
@@ -28,6 +49,24 @@ class TestStepTrigger(TestCase):
         node.status = STATUS.IN_PROGRESS
         node.trigger('student')
         mock_complete.assert_called_once()
+
+    @patch('task.models.step.StepInst.complete')
+    def test_trigger_start(self, mock_complete):
+        node = StepInst(node_type=NODE_TYPE.START, status=STATUS.NEW)
+        mock_task = MagicMock()
+        node.task.get = MagicMock(return_value=mock_task)
+        node.trigger()
+        mock_complete.assert_called_once()
+        mock_task.start.assert_called_once()
+
+    @patch('neomodel.StructuredNode.save')
+    def test_complete_end(self, mock_save):
+        node = StepInst(node_type=NODE_TYPE.END, status=STATUS.NEW)
+        mock_task = MagicMock()
+        node.task.get = MagicMock(return_value=mock_task)
+        node.complete()
+        mock_task.complete.assert_called_once()
+        self.assertEqual(STATUS.COMPLETED, node.status)
 
     @patch('task.models.step.StepInst.complete')
     def test_complete(self, mock_complete):

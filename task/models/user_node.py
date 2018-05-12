@@ -91,7 +91,7 @@ class UserNode(StructuredNode):
         return task.save()
 
     @db.transaction
-    def create_task(self, name):
+    def create_task(self, name, task_info=None):
         """create task for a user
 
         Args:
@@ -110,4 +110,5 @@ class UserNode(StructuredNode):
         end = StepInst(name='End', node_type=NODE_TYPE.END).save()
         task.steps.connect(start)
         task.steps.connect(end)
+        task.update(task_info)
         return task

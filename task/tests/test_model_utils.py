@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.test import TestCase
+from mock import MagicMock
 from task.models import utils
 from taskservice.exceptions import BadRequest
 from taskservice.constants import NODE_TYPE
@@ -29,6 +30,16 @@ class Test_Model_Utils(TestCase):
                 'value': 'values'
             }
         ]
+
+    def test_update_datetime(self):
+        t = '2018-05-12T21:54:43.562037Z'
+        task = MagicMock()
+        task_info = {
+            'key': t
+        }
+        utils.update_datetime(task, 'key', task_info)
+        self.assertEqual(t, task.key.isoformat() + 'Z')
+        self.assertNotIn('key', task_info)
 
     def test_assert_start_end_no_start(self):
         nodes = [{

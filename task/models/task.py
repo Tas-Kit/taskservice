@@ -167,6 +167,8 @@ class TaskModel(StructuredNode):
                 del task_info['id']
             if 'tid' in task_info:
                 del task_info['tid']
+            if 'deadline' in task_info:
+                utils.update_datetime(self, 'deadline', task_info)
             old_roles = self.roles
             for key in task_info:
                 setattr(self, key, task_info[key])

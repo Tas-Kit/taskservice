@@ -35,6 +35,11 @@ class TaskListView(LoggingMixin, APIView):
             method='POST',
             required=True,
         ),
+        Field(
+            'task_info',
+            method='POST',
+            required=False,
+        ),
     ])
 
     @preprocess
@@ -48,8 +53,8 @@ class TaskListView(LoggingMixin, APIView):
         })
 
     @preprocess
-    def post(self, request, user, name):
-        task = user.create_task(name)
+    def post(self, request, user, name, task_info=None):
+        task = user.create_task(name, task_info)
         return Response(task.__properties__)
 
 

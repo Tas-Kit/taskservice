@@ -13,10 +13,12 @@ class TestTask(TestCase):
     @patch('neomodel.StructuredNode.save')
     @patch('task.models.task.TaskModel.update_roles')
     def test_update(self, mock_update_roles, mock_save):
+        t = '2018-05-12T21:54:43.562037Z'
         task_info = {
             'id': 'test id',
             'tid': 'test tid',
             'name': 'new task',
+            'deadline': t,
             'description': 'new description',
             'roles': ['role1', 'role2']
         }
@@ -27,6 +29,7 @@ class TestTask(TestCase):
         self.assertEqual(['role1', 'role2'], task.roles)
         self.assertFalse(hasattr(task, 'id'))
         self.assertNotEqual('test tid', task.tid)
+        self.assertEqual(t, task.deadline.isoformat() + 'Z')
         mock_save.assert_called_once()
         mock_update_roles.assert_called_once_with(['role2', 'role3'])
 

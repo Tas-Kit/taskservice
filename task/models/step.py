@@ -10,6 +10,7 @@ from neomodel import (
     RelationshipFrom,
 )
 
+import utils
 from relationships import Next
 from taskservice.constants import NODE_TYPE, STATUS, TIME_UNITS, STATUS_LIST, NODE_TYPES
 from taskservice.exceptions import CannotComplete
@@ -38,12 +39,17 @@ class StepInst(StepModel):
     status = StringProperty(default=STATUS.NEW, choices=STATUS_LIST)
 
     def update(self, data):
+        if 'sid' in data:
+            del data['sid']
+        if 'id' in data:
+            del data['id']
+        if 'deadline' in data:
+            utils.update_datetime(self, 'deadline', data)
         for key in data:
-            if key != 'sid' and key != 'id':
-                setattr(self, key, data[key])
+            setattr(self, key, data[key])
         self.save()
 
-    def trigger(self, role):
+    def trigger(self, role=None):
         if self.node_type == NODE_TYPE.START and self.status == STATUS.NEW:
             self.task.get().start()
             self.complete()
