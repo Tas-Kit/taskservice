@@ -38,8 +38,10 @@ class TestTaskListView(TestCase):
         response = self.client.post(api_url, data={
             'name': 'new task'
         })
-        self.assertEqual('new task', response.data['name'])
-        self.assertEqual(STATUS.NEW, response.data['status'])
+        data = response.data
+        task = data['task_info']
+        self.assertEqual('new task', task['name'])
+        self.assertEqual(STATUS.NEW, task['status'])
 
 
 class TestTaskGraphView(TestCase):

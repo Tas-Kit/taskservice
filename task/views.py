@@ -89,7 +89,7 @@ class TaskListView(LoggingMixin, APIView):
     @preprocess
     def post(self, request, user, **task_info):
         task = user.create_task(task_info['name'], task_info)
-        return Response(task.__properties__)
+        return Response(task.get_graph())
 
 
 class TaskChangeInvitationView(LoggingMixin, APIView):
