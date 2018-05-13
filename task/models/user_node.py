@@ -43,6 +43,12 @@ class UserNode(StructuredNode):
         if has_task.super_role == SUPER_ROLE.OWNER:
             raise OwnerCannotChangeInvitation()
 
+    def trigger(self, task, sid):
+        self.assert_accept(task)
+        step = task.steps.get(sid=sid)
+        has_task = self.tasks.relationship(task)
+        step.trigger(role=has_task.role)
+
     @db.transaction
     def invite(self, task, user, super_role=SUPER_ROLE.STANDARD, role=None):
         self.assert_admin(task)

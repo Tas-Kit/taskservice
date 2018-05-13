@@ -28,6 +28,21 @@ class UserView(LoggingMixin, APIView):
         })
 
 
+class TaskTriggerView(LoggingMixin, APIView):
+    schema = Schema(manual_fields=[
+        Field(
+            'sid',
+            method='POST',
+            required=True
+        )
+    ])
+
+    @preprocess
+    def post(self, request, user, task, sid):
+        user.trigger(task, sid)
+        return Response(task.get_graph())
+
+
 class TaskListView(LoggingMixin, APIView):
     schema = Schema(manual_fields=[
         Field(

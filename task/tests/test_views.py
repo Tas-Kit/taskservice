@@ -89,6 +89,21 @@ class TestTaskGraphView(TestCase):
         self.step2.delete()
         self.end_step.delete()
 
+    def test_trigger(self):
+        response = self.client.post('{0}trigger/{1}/'.format(
+            api_url, self.task.tid),
+            content_type='application/json',
+            data=dumps({
+                'sid': self.start_step.sid
+            }))
+        self.assertEqual(200, response.status_code)
+        self.start_step.refresh()
+        self.step1.refresh()
+        self.step2.refresh()
+        self.assertEqual(STATUS.COMPLETED, self.start_step.status)
+        self.assertEqual(STATUS.IN_PROGRESS, self.step1.status)
+        self.assertEqual(STATUS.IN_PROGRESS, self.step2.status)
+
     def test_clone(self):
         response = self.client.post('{0}clone/{1}/'.format(
             api_url, self.task.tid),
@@ -110,6 +125,10 @@ class TestTaskGraphView(TestCase):
         task_info = graph['task_info']
         self.assertEqual('test task copy', task_info['name'])
         self.assertEqual('my description', task_info['description'])
+        task = self.user1.tasks.get(tid=task_info['tid'])
+        self.assertEqual('test task copy', task.name)
+        self.assertEqual('my description', task.description)
+        self.assertEqual(4, len(task.steps.all()))
 
     def test_delete(self):
         response = self.client.delete('{0}{1}/'.format(
