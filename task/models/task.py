@@ -90,17 +90,23 @@ class TaskModel(StructuredNode):
         data = {
             'nodes': nodes,
             'edges': edges,
-            'users': users
+            'users': users,
+            'task_info': self.__properties__
         }
         return data
 
-    def clone_graph(self):
+    def clone(self, task_info):
         """clone all the step model data and relations
 
         Returns:
             TYPE: Description
         """
-        return None
+        graph = self.get_graph()
+        nodes = graph['nodes']
+        edges = graph['edges']
+        task = TaskInst(name=self.name + ' copy').save()
+        task.save_graph(nodes, edges, task_info)
+        return task
 
     def remove_edges(self, edges):
         for from_sid, to_sid in edges:

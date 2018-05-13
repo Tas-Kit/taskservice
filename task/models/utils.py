@@ -17,7 +17,9 @@ def assert_start_end(nodes):
 
 def update_datetime(obj, key, task_info):
     time = task_info[key]
-    setattr(obj, key, datetime.strptime(time, '%Y-%m-%dT%H:%M:%S.%fZ'))
+    if type(time) is str or type(time) is unicode:
+        time = datetime.strptime(time, '%Y-%m-%dT%H:%M:%S.%fZ')
+    setattr(obj, key, time)
     del task_info[key]
 
 

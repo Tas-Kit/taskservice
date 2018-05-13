@@ -89,6 +89,34 @@ class TestTaskGraphView(TestCase):
         self.step2.delete()
         self.end_step.delete()
 
+    def test_clone(self):
+        response = self.client.post('{0}clone/{1}/'.format(
+            api_url, self.task.tid),
+            content_type='application/json',
+            data=dumps({
+                'task_info': {
+                    'roles': ['teacher'],
+                    'description': 'my description'
+                }
+            }))
+        graph = response.data
+        users = graph['users']
+        self.assertEqual(1, len(users))
+        self.assertEqual('user 1', users[0]['basic']['username'])
+        nodes = graph['nodes']
+        self.assertEqual(4, len(nodes))
+        edges = graph['edges']
+        self.assertEqual(4, len(edges))
+        task_info = graph['task_info']
+        self.assertEqual('test task copy', task_info['name'])
+        self.assertEqual('my description', task_info['description'])
+
+    def test_delete(self):
+        response = self.client.delete('{0}{1}/'.format(
+            api_url, self.task.tid))
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(0, len(self.user1.tasks.all()))
+
     def test_save_graph_not_authorized(self):
         data = {
             'nodes': [],

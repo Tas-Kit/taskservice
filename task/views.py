@@ -164,6 +164,21 @@ class TaskInvitationView(LoggingMixin, APIView):
         return Response('SUCCESS')
 
 
+class TaskCloneView(LoggingMixin, APIView):
+    schema = Schema(manual_fields=[
+        Field(
+            'task_info',
+            method='POST',
+            required=True
+        )
+    ])
+
+    @preprocess
+    def post(self, request, user, task, task_info):
+        new_task = user.clone_task(task, task_info)
+        return Response(new_task.get_graph())
+
+
 class TaskGraphView(LoggingMixin, APIView):
     schema = Schema(manual_fields=[
         Field(

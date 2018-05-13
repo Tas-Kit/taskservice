@@ -83,6 +83,12 @@ class UserNode(StructuredNode):
         self.assert_has_higher_permission(task, user)
         user.tasks.disconnect(task)
 
+    def clone_task(self, task, task_info):
+        self.assert_accept(task)
+        new_task = task.clone(task_info)
+        self.tasks.connect(new_task)
+        return new_task
+
     @db.transaction
     def delete_task(self, task):
         self.assert_owner(task)
