@@ -13,6 +13,7 @@ SECRET_KEY = os.environ['SECRET_KEY']
 # SECURE_SSL_REDIRECT = True
 # SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 # SECURE_HSTS_PRELOAD = True
+DATABASE_ROUTERS = ['taskservice.database_routers.UserLogRouter']
 
 DATABASES = {
     'default': {
@@ -22,8 +23,18 @@ DATABASES = {
         'USER': os.environ['POSTGRES_USER'],
         'PASSWORD': os.environ['POSTGRES_PASSWORD'],
         'PORT': 5432,
+    },
+    'user_log': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'HOST': os.environ['LOG_HOST'],
+        'USER': os.environ['LOG_USER'],
+        'PASSWORD': os.environ['LOG_PASSWORD'],
+        'PORT': 5432,
     }
 }
+
+DATABASE_ROUTERS = ['taskservice.database_routers.UserLogRouter']
 
 ALLOWED_HOSTS.append('sandbox.tas-kit.com')
 NEO4J_AUTH = os.environ['NEO4J_AUTH']
