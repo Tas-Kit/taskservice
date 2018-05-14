@@ -23,7 +23,6 @@ class BaseLoggingMixin(object):
         super(BaseLoggingMixin, self).__init__(*args, **kwargs)
 
     def initial(self, request, *args, **kwargs):
-        print 'initial'
         self.log = {}
         self.log['requested_at'] = now()
         self.log['data'] = request.body
@@ -84,7 +83,6 @@ class BaseLoggingMixin(object):
             except Exception as e:
                 # ensure that all exceptions raised by handle_log
                 # doesn't prevent API call to continue as expected
-                print str(e)
                 logger.exception('Logging API call raise exception!')
 
         return response
@@ -127,7 +125,6 @@ class BaseLoggingMixin(object):
         user = request.user
         if not user.is_authenticated:
             return None
-        print user.username
         return user.username
 
     def _get_response_ms(self):
