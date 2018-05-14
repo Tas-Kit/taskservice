@@ -8,7 +8,6 @@ from django.utils.timezone import now
 from .models import APIRequestLog
 
 logger = logging.getLogger(__name__)
-print 'hello'
 
 
 class BaseLoggingMixin(object):
