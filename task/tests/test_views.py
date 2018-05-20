@@ -234,6 +234,8 @@ class TestTaskGraphView(TestCase):
         nodes = response.data['nodes']
         edges = response.data['edges']
         users = response.data['users']
+        self.user1_data['uid'] = self.user1_data['pk']
+        self.user2_data['uid'] = self.user2_data['pk']
         del self.user1_data['pk']
         del self.user2_data['pk']
         self.assertIn(dumps(self.user1_data), dumps(users))
