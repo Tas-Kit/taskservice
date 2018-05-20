@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from dateutil.parser import parse
 from django.test import TestCase
 from mock import patch, MagicMock
 from task.models.step import StepInst
@@ -25,7 +26,7 @@ class TestStep(TestCase):
         step.update(data)
         self.assertEqual('new step', step.name)
         self.assertEqual('new description', step.description)
-        self.assertEqual(t, step.deadline.isoformat() + 'Z')
+        self.assertEqual(parse(t), step.deadline)
         self.assertNotIn('id', data)
         self.assertNotIn('sid', data)
 

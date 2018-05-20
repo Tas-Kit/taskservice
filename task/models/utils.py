@@ -1,6 +1,6 @@
-from datetime import datetime
 from taskservice.exceptions import BadRequest
 from taskservice.constants import NODE_TYPE
+from dateutil.parser import parse
 
 
 def assert_start_end(nodes):
@@ -18,7 +18,7 @@ def assert_start_end(nodes):
 def update_datetime(obj, key, task_info):
     time = task_info[key]
     if type(time) is str or type(time) is unicode:
-        time = datetime.strptime(time, '%Y-%m-%dT%H:%M:%S.%fZ')
+        time = parse(time)
     setattr(obj, key, time)
     del task_info[key]
 

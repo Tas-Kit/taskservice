@@ -6,6 +6,7 @@ from task.models.task import TaskInst
 from task.models.step import StepInst
 from mock import patch, MagicMock
 from taskservice.constants import STATUS
+from dateutil.parser import parse
 
 
 class TestTask(TestCase):
@@ -38,7 +39,7 @@ class TestTask(TestCase):
         self.assertEqual(['role1', 'role2'], task.roles)
         self.assertFalse(hasattr(task, 'id'))
         self.assertNotEqual('test tid', task.tid)
-        self.assertEqual(t, task.deadline.isoformat() + 'Z')
+        self.assertEqual(parse(t), task.deadline)
         mock_save.assert_called_once()
         mock_update_roles.assert_called_once_with(['role2', 'role3'])
 

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from dateutil.parser import parse
 from django.test import TestCase
 from mock import MagicMock
 from task.models import utils
@@ -38,7 +39,7 @@ class Test_Model_Utils(TestCase):
             'key': t
         }
         utils.update_datetime(task, 'key', task_info)
-        self.assertEqual(t, task.key.isoformat() + 'Z')
+        self.assertEqual(parse(t), task.key)
         self.assertNotIn('key', task_info)
 
     def test_assert_start_end_no_start(self):
