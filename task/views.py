@@ -176,7 +176,13 @@ class TaskInvitationView(LoggingMixin, APIView):
         target_user = get_user_by_username(username)
         target_user_node = UserNode.get_or_create({'uid': target_user.id})[0]
         user.invite(task, target_user_node, super_role, role)
-        return Response('SUCCESS')
+        return Response({
+            'uid': str(target_user.id),
+            'email': target_user.email,
+            'username': target_user.username,
+            'first_name': target_user.first_name,
+            'last_name': target_user.last_name
+        })
 
 
 class TaskCloneView(LoggingMixin, APIView):
