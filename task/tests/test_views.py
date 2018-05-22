@@ -324,12 +324,13 @@ class TestTaskInvitationView(TestCase):
             'role': 'teacher'
         })
         self.assertEqual(200, response.status_code)
-        self.assertEqual('2', response.data['uid'])
-        self.assertEqual('username', response.data['username'])
+        self.assertEqual('2', response.data['basic']['uid'])
+        self.assertEqual('username', response.data['basic']['username'])
         self.assertTrue(self.user2.tasks.is_connected(self.task))
         has_task = self.user2.tasks.relationship(self.task)
         self.assertEqual(SUPER_ROLE.ADMIN, has_task.super_role)
         self.assertEqual('teacher', has_task.role)
+        self.assertEqual(has_task.__properties__, response.data['has_task'])
 
     def test_revoke(self):
         self.user2.tasks.connect(self.task, {
