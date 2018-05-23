@@ -248,22 +248,22 @@ class TestTaskGraphView(TestCase):
         self.assertIn({
             'from': self.start_step.sid,
             'to': self.step1.sid,
-            'value': None
+            'label': None
         }, edges)
         self.assertIn({
             'from': self.start_step.sid,
             'to': self.step2.sid,
-            'value': None
+            'label': None
         }, edges)
         self.assertIn({
             'from': self.step1.sid,
             'to': self.end_step.sid,
-            'value': None
+            'label': None
         }, edges)
         self.assertIn({
             'from': self.step2.sid,
             'to': self.end_step.sid,
-            'value': None
+            'label': None
         }, edges)
 
 

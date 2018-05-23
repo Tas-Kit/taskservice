@@ -13,4 +13,4 @@ class HasStep(StructuredRel):
 
 
 class Next(StructuredRel):
-    value = StringProperty(required=False)
+    label = StringProperty(required=False)

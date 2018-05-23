@@ -171,7 +171,7 @@ class TestTask(TestCase):
         task.steps.get = MagicMock(side_effect=[node1, node2])
         task.change_edges([(node1.sid, node2.sid)], {
             node1.sid + '->' + node2.sid: {
-                'value': 'test_value'
+                'label': 'test_value'
             }
         })
         next_step.save.assert_called_once()

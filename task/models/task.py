@@ -82,7 +82,7 @@ class TaskModel(StructuredNode):
             {
                 'from': step.sid,
                 'to': edge.sid,
-                'value': step.nexts.relationship(StepInst(id=edge.id)).value
+                'label': step.nexts.relationship(StepInst(id=edge.id)).label
             }
             for step in steps
             for edge in step.nexts
@@ -124,8 +124,8 @@ class TaskModel(StructuredNode):
             to_node = self.steps.get(sid=to_sid)
             edge = from_node.nexts.relationship(to_node)
             edge_data = edge_map[from_sid + '->' + to_sid]
-            if 'value' in edge_data:
-                edge.value = edge_data['value']
+            if 'label' in edge_data:
+                edge.label = edge_data['label']
                 edge.save()
 
     def change_nodes(self, sids, node_map):
