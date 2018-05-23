@@ -1,7 +1,6 @@
 from taskservice.exceptions import MissingRequiredParam, BadRequest
 from task.models.user_node import UserNode
 from django.contrib.auth.models import User
-from django.contrib.auth import login
 
 
 def assert_uid_valid(uid):
@@ -23,8 +22,7 @@ def get_user(request):
     uid = cookie.replace(' ', '')
     if 'uid' in uid:
         uid = uid.replace('uid=', '')
-    user = assert_uid_valid(uid)
-    login(request, user)
+    assert_uid_valid(uid)
     return UserNode.get_or_create({'uid': uid})[0]
 
 
