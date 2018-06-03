@@ -53,12 +53,12 @@ class StepInst(StepModel):
         if self.node_type == NODE_TYPE.START and self.status == STATUS.NEW:
             self.task.get().start()
             self.complete()
-        elif self.status == STATUS.IN_PROGRESS and role in self.assignees:
+        elif self.status == STATUS.IN_PROGRESS and (role in self.assignees or not self.assignees):
             if self.reviewers:
                 self.submit_for_review()
             else:
                 self.complete()
-        elif self.status == STATUS.READY_FOR_REVIEW and role in self.reviewers:
+        elif self.status == STATUS.READY_FOR_REVIEW and (role in self.reviewers or not self.reviewers):
             self.complete()
         else:
             raise CannotComplete()

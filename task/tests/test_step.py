@@ -51,6 +51,14 @@ class TestStepTrigger(TestCase):
         node.trigger('student')
         mock_complete.assert_called_once()
 
+    @patch('task.models.step.StepInst.submit_for_review')
+    def test_no_assignee(self, mock_submit_for_review):
+        node = StepInst(name='hello')
+        node.reviewers = ['student']
+        node.status = STATUS.IN_PROGRESS
+        node.trigger('student')
+        mock_submit_for_review.assert_called_once()
+
     @patch('task.models.step.StepInst.complete')
     def test_trigger_start(self, mock_complete):
         node = StepInst(node_type=NODE_TYPE.START, status=STATUS.NEW)
@@ -87,6 +95,7 @@ class TestStepTrigger(TestCase):
 
     def test_in_progress_not_assignee(self):
         node = StepInst(name='hello')
+        node.assignees = ['parent']
         node.reviewers = ['teacher']
         node.status = STATUS.IN_PROGRESS
         with self.assertRaises(CannotComplete):
@@ -95,6 +104,7 @@ class TestStepTrigger(TestCase):
     def test_ready_for_review_not_reviewer(self):
         node = StepInst(name='hello')
         node.status = STATUS.READY_FOR_REVIEW
+        node.reviewers = ['parent']
         with self.assertRaises(CannotComplete):
             node.trigger('teacher')
 
