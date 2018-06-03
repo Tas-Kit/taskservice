@@ -69,11 +69,11 @@ class TestStepTrigger(TestCase):
         mock_task.start.assert_called_once()
 
     @patch('neomodel.StructuredNode.save')
-    def test_complete_end(self, mock_save):
+    def test_trigger_self_end(self, mock_save):
         node = StepInst(node_type=NODE_TYPE.END, status=STATUS.NEW)
         mock_task = MagicMock()
         node.task.get = MagicMock(return_value=mock_task)
-        node.complete()
+        node.trigger_self()
         mock_task.complete.assert_called_once()
         self.assertEqual(STATUS.COMPLETED, node.status)
 

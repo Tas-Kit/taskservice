@@ -87,8 +87,15 @@ class StepInst(StepModel):
                     next_node.status == STATUS.COMPLETED:
                 next_node.trigger_next()
             elif next_node.status == STATUS.NEW and self.check_parents_are_completed(next_node) is True:
-                next_node.status = STATUS.IN_PROGRESS
-                next_node.save()
+                next_node.trigger_self()
+
+    def trigger_self(self):
+        if self.node_type == NODE_TYPE.END:
+            self.status = STATUS.COMPLETED
+            self.task.get().complete()
+        else:
+            self.status = STATUS.IN_PROGRESS
+        self.save()
 
     def complete(self):
         """complete a step.
@@ -96,7 +103,4 @@ class StepInst(StepModel):
         """
         self.status = STATUS.COMPLETED
         self.save()
-        if self.node_type == NODE_TYPE.END:
-            self.task.get().complete()
-        else:
-            self.trigger_next()
+        self.trigger_next()
