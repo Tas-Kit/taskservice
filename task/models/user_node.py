@@ -2,7 +2,7 @@ from neomodel import StructuredNode, StringProperty, RelationshipTo, db
 from relationships import HasTask
 from task import TaskInst
 from step import StepInst
-from taskservice.constants import SUPER_ROLE, ACCEPTANCE, NODE_TYPE
+from taskservice.constants import SUPER_ROLE, ACCEPTANCE, NODE_TYPE, START_END_OFFSET
 from taskservice.exceptions import NotOwner, NotAdmin, NotAccept, AlreadyHasTheTask, OwnerCannotChangeInvitation, BadRequest
 
 
@@ -122,8 +122,8 @@ class UserNode(StructuredNode):
             'acceptance': ACCEPTANCE.ACCEPT
         }
         self.tasks.connect(task, has_task_param)
-        start = StepInst(name='Start', node_type=NODE_TYPE.START).save()
-        end = StepInst(name='End', node_type=NODE_TYPE.END).save()
+        start = StepInst(name='Start', node_type=NODE_TYPE.START, pos_x=-START_END_OFFSET).save()
+        end = StepInst(name='End', node_type=NODE_TYPE.END, pos_x=START_END_OFFSET).save()
         task.steps.connect(start)
         task.steps.connect(end)
         task.update(task_info)

@@ -1,3 +1,6 @@
+START_END_OFFSET = 360
+
+
 class TIME_UNIT(object):
     SECOND = 's'
     MINUTE = 'm'
