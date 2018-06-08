@@ -11,6 +11,31 @@ from dateutil.parser import parse
 
 class TestTask(TestCase):
 
+    def test_preprocess_edges(self):
+        sample_edges = [
+            {
+                'from': 'node1',
+                'to': 'node2'
+            },
+            {
+                'from': 'node1',
+                'to': 'node2'
+            },
+            {
+                'from': 'node1',
+                'to': 'node2'
+            },
+            {
+                'from': 'node3',
+                'to': 'node3'
+            }
+        ]
+        processed_edges = TaskInst.preprocess_edges(sample_edges)
+        self.assertEqual([{
+            'from': 'node1',
+            'to': 'node2'
+        }], processed_edges)
+
     @patch('neomodel.StructuredNode.delete')
     def test_delete(self, mock_delete):
         task = TaskInst()
@@ -94,6 +119,7 @@ class TestTask(TestCase):
         mock_update_user_roles.assert_called_once()
         mock_update_user_roles.assert_called_once()
 
+    @patch('task.models.task.TaskModel.preprocess_edges', return_value='processed_edges')
     @patch('task.models.task.TaskModel.add_nodes', return_value=MagicMock())
     @patch('task.models.task.TaskModel.add_edges')
     @patch('task.models.task.TaskModel.change_nodes')
@@ -114,14 +140,15 @@ class TestTask(TestCase):
                         mock_change_edges,
                         mock_change_nodes,
                         mock_add_edges,
-                        mock_add_nodes):
+                        mock_add_nodes,
+                        mock_preprocess_edges):
         task = TaskInst(name='task').save()
         task.save_graph('my nodes', 'my edges')
         mock_assert_start_end.assert_called_once_with('my nodes')
         self.assertEqual(2, mock_get_sid_edge_sets.call_count)
         self.assertEqual(2, mock_set_diff.call_count)
         mock_get_node_edge_map.assert_called_once_with(
-            'my nodes', 'my edges')
+            'my nodes', 'processed_edges')
         mock_remove_edges.assert_called_once()
         mock_remove_nodes.assert_called_once()
         mock_change_edges.assert_called_once()

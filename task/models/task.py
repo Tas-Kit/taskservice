@@ -187,6 +187,22 @@ class TaskModel(StructuredNode):
             self.update_roles(old_roles)
             self.save()
 
+    @staticmethod
+    def preprocess_edges(edges):
+        """Remove self edges and duplicated edges
+
+        Args:
+            edges (TYPE): Description
+        """
+        edge_set = set()
+        new_edges = []
+        for edge in edges:
+            if edge['from'] + edge['to'] not in edge_set and \
+                    edge['from'] != edge['to']:
+                new_edges.append(edge)
+                edge_set.add(edge['from'] + edge['to'])
+        return new_edges
+
     @db.transaction
     def save_graph(self, nodes, edges, task_info=None):
         """save all the step data
@@ -198,6 +214,7 @@ class TaskModel(StructuredNode):
             TYPE: Description
         """
         utils.assert_start_end(nodes)
+        edges = self.preprocess_edges(edges)
         new_sids, new_edges = utils.get_sid_edge_sets(nodes, edges)
         data = self.get_graph()
         old_sids, old_edges = utils.get_sid_edge_sets(data['nodes'], data['edges'])
