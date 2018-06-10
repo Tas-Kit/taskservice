@@ -106,6 +106,7 @@ class TaskModel(StructuredNode):
         nodes = graph['nodes']
         edges = graph['edges']
         task = TaskInst(name=self.name + ' copy').save()
+        task_info['status'] = STATUS.NEW
         task.save_graph(nodes, edges, task_info)
         return task
 
