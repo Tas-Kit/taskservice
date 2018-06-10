@@ -9,7 +9,6 @@ from task.models.user_node import UserNode
 from taskservice.schemas import Schema, Field
 from taskservice.constants import SUPER_ROLE
 from task.utils import preprocess, get_user_by_username, assert_uid_valid
-from django.contrib.auth.models import User
 from rest_framework_tracking.mixins import LoggingMixin
 # Create your views here.
 
@@ -18,14 +17,7 @@ class UserView(LoggingMixin, APIView):
 
     @preprocess
     def get(self, request, user):
-        u = User.objects.get(pk=user.uid)
-        return Response({
-            'uid': user.uid,
-            'email': u.email,
-            'username': u.username,
-            'first_name': u.first_name,
-            'last_name': u.last_name
-        })
+        return Response('Deprecated API')
 
 
 class TaskTriggerView(LoggingMixin, APIView):
