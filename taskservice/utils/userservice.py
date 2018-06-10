@@ -1,7 +1,7 @@
 import os
 import requests
 
-host = os.getenv('userservice', 'userservice')
+host = os.getenv('USERSERVICE', 'userservice')
 base_url = 'http://{0}'
 sub_url = '/api/v1/userservice'
 
