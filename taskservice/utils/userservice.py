@@ -13,7 +13,12 @@ def get_user_list(uid_list):
     return response.json()['results']
 
 
-def get_user(uid):
-    url = '{0}{1}/users/?id={2}'.format(base_url, sub_url, uid)
+def get_user(uid=None, username=None):
+    query = []
+    if uid:
+        query.append('id={0}'.format(uid))
+    if username:
+        query.append('username={1}'.format(username))
+    url = '{0}{1}/users/?{2}'.format(base_url, sub_url, '&'.join(query))
     response = requests.get(url)
     return response.json()['results'][0]

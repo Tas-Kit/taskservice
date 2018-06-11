@@ -119,6 +119,7 @@ class TestTask(TestCase):
         mock_update_user_roles.assert_called_once()
         mock_update_user_roles.assert_called_once()
 
+    @patch('taskservice.utils.userservice.get_user_list')
     @patch('task.models.task.TaskModel.preprocess_edges', return_value='processed_edges')
     @patch('task.models.task.TaskModel.add_nodes', return_value=MagicMock())
     @patch('task.models.task.TaskModel.add_edges')
@@ -141,7 +142,8 @@ class TestTask(TestCase):
                         mock_change_nodes,
                         mock_add_edges,
                         mock_add_nodes,
-                        mock_preprocess_edges):
+                        mock_preprocess_edges,
+                        mock_get_user_list):
         task = TaskInst(name='task').save()
         task.save_graph('my nodes', 'my edges')
         mock_assert_start_end.assert_called_once_with('my nodes')

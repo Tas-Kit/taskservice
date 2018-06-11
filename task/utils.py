@@ -1,18 +1,18 @@
 from taskservice.exceptions import MissingRequiredParam, BadRequest
 from task.models.user_node import UserNode
-from django.contrib.auth.models import User
+from taskservice.utils import userservice
 
 
 def assert_uid_valid(uid):
     try:
-        return User.objects.get(pk=int(uid))
+        return userservice.get_user(uid)
     except Exception as e:
-        raise BadRequest(str(e))
+        raise BadRequest('Unable to find user with uid {0}. Detail: {1}'.format(uid, e))
 
 
 def get_user_by_username(username):
     try:
-        return User.objects.get(username=username)
+        return userservice.get_user(username=username)
     except Exception as e:
         raise BadRequest(str(e))
 

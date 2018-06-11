@@ -166,16 +166,10 @@ class TaskInvitationView(LoggingMixin, APIView):
     @preprocess
     def post(self, request, user, task, username, super_role=SUPER_ROLE.STANDARD, role=None):
         target_user = get_user_by_username(username)
-        target_user_node = UserNode.get_or_create({'uid': target_user.id})[0]
+        target_user_node = UserNode.get_or_create({'uid': target_user['pk']})[0]
         user.invite(task, target_user_node, super_role, role)
         return Response({
-            'basic': {
-                'uid': str(target_user.id),
-                'email': target_user.email,
-                'username': target_user.username,
-                'first_name': target_user.first_name,
-                'last_name': target_user.last_name
-            },
+            'basic': target_user,
             'has_task': target_user_node.tasks.relationship(task).__properties__
         })
 
