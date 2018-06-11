@@ -9,18 +9,9 @@ from task.models.user_node import UserNode
 from taskservice.schemas import Schema, Field
 from taskservice.constants import SUPER_ROLE
 from task.utils import preprocess, get_user_by_username, assert_uid_valid
-from rest_framework_tracking.mixins import LoggingMixin
-# Create your views here.
 
 
-class UserView(LoggingMixin, APIView):
-
-    @preprocess
-    def get(self, request, user):
-        return Response('Deprecated API')
-
-
-class TaskTriggerView(LoggingMixin, APIView):
+class TaskTriggerView(APIView):
     schema = Schema(manual_fields=[
         Field(
             'sid',
@@ -35,7 +26,7 @@ class TaskTriggerView(LoggingMixin, APIView):
         return Response(task.get_graph())
 
 
-class TaskListView(LoggingMixin, APIView):
+class TaskListView(APIView):
     schema = Schema(manual_fields=[
         Field(
             'name',
@@ -84,7 +75,7 @@ class TaskListView(LoggingMixin, APIView):
         return Response(task.get_graph())
 
 
-class TaskChangeInvitationView(LoggingMixin, APIView):
+class TaskChangeInvitationView(APIView):
 
     schema = Schema(manual_fields=[
         Field(
@@ -112,7 +103,7 @@ class TaskChangeInvitationView(LoggingMixin, APIView):
         return Response('SUCCESS')
 
 
-class TaskRespondInvitationView(LoggingMixin, APIView):
+class TaskRespondInvitationView(APIView):
     schema = Schema(manual_fields=[
         Field(
             'acceptance',
@@ -127,7 +118,7 @@ class TaskRespondInvitationView(LoggingMixin, APIView):
         return Response('SUCCESS')
 
 
-class TaskRevokeInvitationView(LoggingMixin, APIView):
+class TaskRevokeInvitationView(APIView):
     schema = Schema(manual_fields=[
         Field(
             'uid',
@@ -144,7 +135,7 @@ class TaskRevokeInvitationView(LoggingMixin, APIView):
         return Response('SUCCESS')
 
 
-class TaskInvitationView(LoggingMixin, APIView):
+class TaskInvitationView(APIView):
     schema = Schema(manual_fields=[
         Field(
             'username',
@@ -174,7 +165,7 @@ class TaskInvitationView(LoggingMixin, APIView):
         })
 
 
-class TaskCloneView(LoggingMixin, APIView):
+class TaskCloneView(APIView):
     schema = Schema(manual_fields=[
         Field(
             'task_info',
@@ -189,7 +180,7 @@ class TaskCloneView(LoggingMixin, APIView):
         return Response(new_task.get_graph())
 
 
-class TaskGraphView(LoggingMixin, APIView):
+class TaskGraphView(APIView):
     schema = Schema(manual_fields=[
         Field(
             'nodes',
@@ -220,7 +211,7 @@ class TaskGraphView(LoggingMixin, APIView):
         return Response(task.get_graph())
 
 
-class TaskDetailView(LoggingMixin, APIView):
+class TaskDetailView(APIView):
     schema = Schema(manual_fields=[
         Field(
             'name',
