@@ -92,7 +92,11 @@ class UserNode(StructuredNode):
     def clone_task(self, task, task_info):
         self.assert_accept(task)
         new_task = task.clone(task_info)
-        self.tasks.connect(new_task)
+        has_task_param = {
+            'super_role': SUPER_ROLE.OWNER,
+            'acceptance': ACCEPTANCE.ACCEPT
+        }
+        self.tasks.connect(new_task, has_task_param)
         return new_task
 
     @db.transaction
