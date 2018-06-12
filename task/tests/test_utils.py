@@ -26,7 +26,8 @@ class TestUtils(TestCase):
     @patch('task.utils.assert_uid_valid')
     @patch('neomodel.StructuredNode.get_or_create')
     def test_get_user(self, mock_get_or_create, mock_assert_uid_valid):
-        mock_request = MagicMock(META={'HTTP_COOKIE': 'test_id'})
+        mock_request = MagicMock()
+        mock_request._request.META = {'HTTP_COOKIE': 'hello=abc;uid=test_id'}
         utils.get_user(mock_request)
         mock_get_or_create.assert_called_once_with({'uid': 'test_id'})
 

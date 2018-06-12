@@ -18,10 +18,13 @@ def get_user_by_username(username):
 
 
 def get_user(request):
-    cookie = request.META['HTTP_COOKIE']
-    uid = cookie.replace(' ', '')
-    if 'uid' in uid:
-        uid = uid.replace('uid=', '')
+    cookies = request._request.META['HTTP_COOKIE']
+    cookies = cookies.replace(' ', '').split(';')
+    uid = ''
+    for cookie in cookies:
+        uid = cookie.replace(' ', '')
+        if 'uid' in uid:
+            uid = uid.replace('uid=', '')
     assert_uid_valid(uid)
     return UserNode.get_or_create({'uid': uid})[0]
 
