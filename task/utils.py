@@ -23,7 +23,7 @@ def get_user(request):
     uid = ''
     for cookie in cookies:
         uid = cookie.replace(' ', '')
-        if 'uid' in uid:
+        if uid.startswith('uid='):
             uid = uid.replace('uid=', '')
     assert_uid_valid(uid)
     return UserNode.get_or_create({'uid': uid})[0]
