@@ -35,6 +35,7 @@ DEBUG = os.getenv('DEBUG', True)
 SECRET_KEY = os.getenv('SECRET_KEY', '4en5-g!mfyx*qipadkt2fmowkyt-fj&4%qx#a#td4&b$58_@)9')
 
 INSTALLED_APPS = [
+    'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.staticfiles',
     'django_neomodel',
