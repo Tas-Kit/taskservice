@@ -130,5 +130,7 @@ STATIC_URL = '/static/'
 NEO4J_AUTH = os.getenv('NEO4J_AUTH', 'neo4j:neo4jpass')
 NEO4J_PASS = NEO4J_AUTH.split(':')[1]
 
-NEOMODEL_NEO4J_BOLT_URL = 'bolt://{0}@neo4jdb:7687'.format(NEO4J_AUTH)
+TASKDB = os.getenv('TASKDB', 'taskdb')
+
+NEOMODEL_NEO4J_BOLT_URL = 'bolt://{0}@{1}:7687'.format(NEO4J_AUTH, TASKDB)
 neo4jdb = Graph("bolt://neo4jdb:7687", auth=('neo4j', NEO4J_PASS), password=NEO4J_PASS)
