@@ -18,7 +18,7 @@ def get_user(uid=None, username=None):
     if uid:
         query.append('id={0}'.format(uid))
     if username:
-        query.append('username={1}'.format(username))
+        query.append('username={0}'.format(username))
     url = '{0}{1}/users/?{2}'.format(base_url, sub_url, '&'.join(query))
     response = requests.get(url)
     return response.json()['results'][0]
