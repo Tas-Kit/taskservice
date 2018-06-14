@@ -6,6 +6,6 @@ ADD requirements.txt /taskservice/
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 RUN apt-get update
-RUN apt-get install -y gettext
+RUN apt-get install -y gettext nano
 ADD . /taskservice/
-ENTRYPOINT ["bash", "docker-entrypoint.sh"]
+CMD python manage.py runserver
