@@ -16,8 +16,9 @@ from taskservice.exceptions import (
     NoSuchRole,
     BadRequest
 )
-from taskservice.settings.dev import neo4jdb
+from django.conf import settings
 # Create your tests here.
+neo4jdb = settings.NEO4JDB
 
 
 class TestUserNode(TestCase):

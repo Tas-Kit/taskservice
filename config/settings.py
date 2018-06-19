@@ -86,7 +86,12 @@ WSGI_APPLICATION = 'taskservice.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
-DATABASES = {}
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    }
+}
 
 
 # Password validation
@@ -133,4 +138,4 @@ NEO4J_PASS = NEO4J_AUTH.split(':')[1]
 TASKDB = os.getenv('TASKDB', 'taskdb')
 
 NEOMODEL_NEO4J_BOLT_URL = 'bolt://{0}@{1}:7687'.format(NEO4J_AUTH, TASKDB)
-neo4jdb = Graph("bolt://neo4jdb:7687", auth=('neo4j', NEO4J_PASS), password=NEO4J_PASS)
+NEO4JDB = Graph("bolt://{0}:7687".format(TASKDB), auth=('neo4j', NEO4J_PASS), password=NEO4J_PASS)

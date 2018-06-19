@@ -5,9 +5,11 @@ from dateutil.parser import parse
 from django.test import TestCase
 from mock import patch, MagicMock
 from task.models.step import StepInst
-from taskservice.settings.dev import neo4jdb
+from django.conf import settings
 from taskservice.constants import STATUS, NODE_TYPE
 from taskservice.exceptions import CannotComplete
+
+neo4jdb = settings.NEO4JDB
 
 
 class TestStep(TestCase):
