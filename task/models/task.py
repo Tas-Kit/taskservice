@@ -16,7 +16,7 @@ from taskservice.constants import STATUS, TIME_UNITS, STATUS_LIST
 import utils
 from step import StepInst
 from taskservice.exceptions import NoSuchRole
-from django.contrib.auth.models import User
+from taskservice.utils import userservice
 
 
 class TaskModel(StructuredNode):
@@ -68,14 +68,14 @@ class TaskModel(StructuredNode):
         users = [
             {
                 'basic': {
-                    'username': task_user.username,
-                    'first_name': task_user.first_name,
-                    'last_name': task_user.last_name,
-                    'uid': task_user.id
+                    'username': task_user['username'],
+                    'first_name': task_user['first_name'],
+                    'last_name': task_user['last_name'],
+                    'uid': task_user['id']
                 },
-                'has_task': self.users.relationship(user_map[str(task_user.id)]).__properties__
+                'has_task': self.users.relationship(user_map[str(task_user['id'])]).__properties__
             }
-            for task_user in User.objects.filter(pk__in=user_map.keys())
+            for task_user in userservice.get_user_list(user_map.keys())
         ]
 
         edges = [

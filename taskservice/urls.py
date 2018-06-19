@@ -14,7 +14,10 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
 from django.conf.urls import url, include
+from django.http import HttpResponse
+
 
 urlpatterns = [
-    url(r'^api/v1/', include('task.urls')),
+    url(r'^api/v1/taskservice/', include('task.urls')),
+    url(r'^healthcheck', lambda request:HttpResponse('HEALTHY'))
 ]

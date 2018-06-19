@@ -6,7 +6,6 @@ from mock import patch, MagicMock
 from task import utils
 from taskservice.exceptions import MissingRequiredParam, BadRequest
 from task.models.user_node import UserNode
-from django.contrib.auth.models import User
 # Create your tests here.
 
 
@@ -16,10 +15,9 @@ class TestUtils(TestCase):
         with self.assertRaises(BadRequest):
             utils.assert_uid_valid('bad uid')
 
-    def test_get_user_by_username(self):
-        test_user = User(username='test user')
-        test_user.save()
-        self.assertEqual(test_user, utils.get_user_by_username('test user'))
+    @patch('taskservice.utils.userservice.get_user', return_value='test user')
+    def test_get_user_by_username(self, mock_get_user):
+        self.assertEqual('test user', utils.get_user_by_username('test user'))
 
     def test_get_user_by_invalid_username(self):
         with self.assertRaises(BadRequest):
@@ -28,7 +26,8 @@ class TestUtils(TestCase):
     @patch('task.utils.assert_uid_valid')
     @patch('neomodel.StructuredNode.get_or_create')
     def test_get_user(self, mock_get_or_create, mock_assert_uid_valid):
-        mock_request = MagicMock(META={'HTTP_COOKIE': 'test_id'})
+        mock_request = MagicMock()
+        mock_request._request.META = {'HTTP_COOKIE': 'hello=abc;uid=test_id'}
         utils.get_user(mock_request)
         mock_get_or_create.assert_called_once_with({'uid': 'test_id'})
 
