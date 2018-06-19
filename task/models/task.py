@@ -96,15 +96,18 @@ class TaskModel(StructuredNode):
         }
         return data
 
-    def clone(self, task_info):
+    def clone(self, task_info=None):
         """clone all the step model data and relations
 
         Returns:
             TYPE: Description
         """
+        if task_info is None:
+            task_info = self.__properties__
         graph = self.get_graph()
         nodes = graph['nodes']
         edges = graph['edges']
+        utils.reset_nodes_status(nodes)
         task = TaskInst(name=self.name + ' copy').save()
         task_info['status'] = STATUS.NEW
         task.save_graph(nodes, edges, task_info)

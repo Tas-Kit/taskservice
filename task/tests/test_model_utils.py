@@ -6,7 +6,7 @@ from django.test import TestCase
 from mock import MagicMock
 from task.models import utils
 from taskservice.exceptions import BadRequest
-from taskservice.constants import NODE_TYPE
+from taskservice.constants import NODE_TYPE, STATUS
 
 
 class Test_Model_Utils(TestCase):
@@ -31,6 +31,28 @@ class Test_Model_Utils(TestCase):
                 'value': 'values'
             }
         ]
+
+    def test_reset_nodes_status(self):
+        nodes = [
+            {
+                'name': 'node1',
+                'status': STATUS.IN_PROGRESS
+            },
+            {
+                'name': 'node2',
+                'status': STATUS.COMPLETED
+            },
+        ]
+        utils.reset_nodes_status(nodes)
+        self.assertEqual([
+            {
+                'name': 'node1',
+                'status': STATUS.NEW
+            },
+            {
+                'name': 'node2',
+                'status': STATUS.NEW
+            }], nodes)
 
     def test_update_datetime(self):
         t = '2018-05-12T21:54:43.562037Z'
