@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.test import TestCase
-from json import dumps
-from task.models.user_node import UserNode
-from task.models.step import StepInst
-from taskservice.settings.dev import neo4jdb
-from taskservice.constants import ACCEPTANCE, STATUS, SUPER_ROLE, NODE_TYPE
+# from django.test import TestCase
+# from json import dumps
+# from task.models.user_node import UserNode
+# from task.models.step import StepInst
+# from taskservice.settings.dev import neo4jdb
+# from taskservice.constants import ACCEPTANCE, STATUS, SUPER_ROLE, NODE_TYPE
 # Create your tests here.
 
 api_url = '/api/v1/task/'
