@@ -11,7 +11,13 @@ from task.models.user_node import UserNode
 
 class TestUtils(TestCase):
 
-    def test_assert_uid_valid(self):
+    @patch('taskservice.utils.userservice.get_user', return_value=[])
+    def test_assert_uid_valid(self, mock_get_user):
+        with self.assertRaises(BadRequest):
+            utils.assert_uid_valid('bad uid')
+
+    @patch('taskservice.utils.userservice.get_user', side_effect=BadRequest('bad request'))
+    def test_assert_uid_error(self, mock_get_user):
         with self.assertRaises(BadRequest):
             utils.assert_uid_valid('bad uid')
 
