@@ -132,8 +132,8 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-NEO4J_AUTH = os.getenv('NEO4J_AUTH', 'neo4j:neo4jpass')
-NEO4J_PASS = NEO4J_AUTH.split(':')[1]
+NEO4J_USER = os.getenv('NEO4J_USER', 'neo4j')
+NEO4J_PASS = os.getenv('NEO4J_PASS', 'neo4jpass')
 
 TASKDB = os.getenv('TASKDB', 'taskdb')
 
