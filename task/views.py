@@ -157,7 +157,7 @@ class TaskInvitationView(APIView):
     @preprocess
     def post(self, request, user, task, username, super_role=SUPER_ROLE.STANDARD, role=None):
         target_user = get_user_by_username(username)
-        target_user_node = UserNode.get_or_create({'uid': target_user['id']})[0]
+        target_user_node = UserNode.get_or_create({'uid': target_user['uid']})[0]
         user.invite(task, target_user_node, super_role, role)
         return Response({
             'basic': target_user,
