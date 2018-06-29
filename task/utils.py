@@ -5,7 +5,9 @@ from taskservice.utils import userservice
 
 def assert_uid_valid(uid):
     try:
-        return userservice.get_user(uid)
+        user = userservice.get_user(uid)
+        if not user:
+            raise BadRequest('No user with given uid {0} could be found.')
     except Exception as e:
         raise BadRequest('Unable to find user with uid {0}. Detail: {1}'.format(uid, e))
 

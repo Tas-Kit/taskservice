@@ -37,7 +37,8 @@ class TestTask(TestCase):
             'to': 'node2'
         }], processed_edges)
 
-    def test_clone(self):
+    @patch('taskservice.utils.userservice.get_user_list', return_value=[])
+    def test_clone(self, mock_get_user):
         user = UserNode(uid='sample').save()
         task = user.create_task('task')
         task.status = STATUS.IN_PROGRESS
