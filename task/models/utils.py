@@ -1,5 +1,5 @@
 from taskservice.exceptions import BadRequest
-from taskservice.constants import NODE_TYPE
+from taskservice.constants import NODE_TYPE, STATUS
 from dateutil.parser import parse
 
 
@@ -45,3 +45,8 @@ def get_node_edge_map(nodes, edges):
     node_map = {node['sid']: node for node in nodes}
     edge_map = {edge['from'] + '->' + edge['to']: edge for edge in edges}
     return node_map, edge_map
+
+
+def reset_nodes_status(nodes):
+    for node in nodes:
+        node['status'] = STATUS.NEW

@@ -16,7 +16,7 @@ from taskservice.constants import STATUS, TIME_UNITS, STATUS_LIST
 import utils
 from step import StepInst
 from taskservice.exceptions import NoSuchRole
-from django.contrib.auth.models import User
+from taskservice.utils import userservice
 
 
 class TaskModel(StructuredNode):
@@ -67,15 +67,10 @@ class TaskModel(StructuredNode):
         }
         users = [
             {
-                'basic': {
-                    'username': task_user.username,
-                    'first_name': task_user.first_name,
-                    'last_name': task_user.last_name,
-                    'uid': task_user.id
-                },
-                'has_task': self.users.relationship(user_map[str(task_user.id)]).__properties__
+                'basic': task_user,
+                'has_task': self.users.relationship(user_map[task_user['uid']]).__properties__
             }
-            for task_user in User.objects.filter(pk__in=user_map.keys())
+            for task_user in userservice.get_user_list(user_map.keys())
         ]
 
         edges = [
@@ -96,15 +91,18 @@ class TaskModel(StructuredNode):
         }
         return data
 
-    def clone(self, task_info):
+    def clone(self, task_info=None):
         """clone all the step model data and relations
 
         Returns:
             TYPE: Description
         """
+        if task_info is None:
+            task_info = self.__properties__
         graph = self.get_graph()
         nodes = graph['nodes']
         edges = graph['edges']
+        utils.reset_nodes_status(nodes)
         task = TaskInst(name=self.name + ' copy').save()
         task_info['status'] = STATUS.NEW
         task.save_graph(nodes, edges, task_info)

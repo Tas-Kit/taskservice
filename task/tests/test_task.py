@@ -4,8 +4,9 @@ from __future__ import unicode_literals
 from django.test import TestCase
 from task.models.task import TaskInst
 from task.models.step import StepInst
+from task.models.user_node import UserNode
 from mock import patch, MagicMock
-from taskservice.constants import STATUS
+from taskservice.constants import STATUS, NODE_TYPE
 from dateutil.parser import parse
 
 
@@ -35,6 +36,29 @@ class TestTask(TestCase):
             'from': 'node1',
             'to': 'node2'
         }], processed_edges)
+
+    @patch('taskservice.utils.userservice.get_user_list', return_value=[])
+    def test_clone(self, mock_get_user):
+        user = UserNode(uid='sample').save()
+        task = user.create_task('task')
+        task.status = STATUS.IN_PROGRESS
+        task.save()
+        step = StepInst(name='step', status=STATUS.IN_PROGRESS).save()
+        start = task.steps.get(node_type=NODE_TYPE.START)
+        end = task.steps.get(node_type=NODE_TYPE.END)
+        start.nexts.connect(step)
+        step.nexts.connect(end)
+        task.steps.connect(step)
+        new_task = task.clone()
+        self.assertEqual(new_task.name, task.name)
+        self.assertEqual(new_task.status, STATUS.NEW)
+        new_start = new_task.steps.get(node_type=NODE_TYPE.START)
+        new_step = new_task.steps.get(node_type=NODE_TYPE.NORMAL)
+        new_end = new_task.steps.get(node_type=NODE_TYPE.END)
+        self.assertEqual(new_step.name, 'step')
+        self.assertEqual(new_step.status, STATUS.NEW)
+        self.assertTrue(new_start.nexts.is_connected(new_step))
+        self.assertTrue(new_step.nexts.is_connected(new_end))
 
     @patch('neomodel.StructuredNode.delete')
     def test_delete(self, mock_delete):
@@ -119,6 +143,7 @@ class TestTask(TestCase):
         mock_update_user_roles.assert_called_once()
         mock_update_user_roles.assert_called_once()
 
+    @patch('taskservice.utils.userservice.get_user_list')
     @patch('task.models.task.TaskModel.preprocess_edges', return_value='processed_edges')
     @patch('task.models.task.TaskModel.add_nodes', return_value=MagicMock())
     @patch('task.models.task.TaskModel.add_edges')
@@ -141,7 +166,8 @@ class TestTask(TestCase):
                         mock_change_nodes,
                         mock_add_edges,
                         mock_add_nodes,
-                        mock_preprocess_edges):
+                        mock_preprocess_edges,
+                        mock_get_user_list):
         task = TaskInst(name='task').save()
         task.save_graph('my nodes', 'my edges')
         mock_assert_start_end.assert_called_once_with('my nodes')

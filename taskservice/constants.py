@@ -1,4 +1,4 @@
-START_END_OFFSET = 360
+START_END_OFFSET = 320
 
 
 class TIME_UNIT(object):

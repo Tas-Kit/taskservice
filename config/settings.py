@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
 import os
-import logging
+from py2neo import Graph
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -21,7 +21,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
 
-ALLOWED_HOSTS = ['localhost', 'proxyserver', 'taskservice']
+ALLOWED_HOSTS = ['*']
 
 # logger = logging.getLogger('taskservice')
 # formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -31,6 +31,8 @@ ALLOWED_HOSTS = ['localhost', 'proxyserver', 'taskservice']
 # logger.setLevel(logging.DEBUG if DEBUG else logging.WARNING)
 
 # Application definition
+DEBUG = os.getenv('DEBUG', True)
+SECRET_KEY = os.getenv('SECRET_KEY', '4en5-g!mfyx*qipadkt2fmowkyt-fj&4%qx#a#td4&b$58_@)9')
 
 INSTALLED_APPS = [
     'django.contrib.auth',
@@ -86,11 +88,8 @@ WSGI_APPLICATION = 'taskservice.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'HOST': 'psqldb',
-        'PORT': 5432,
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
 
@@ -132,3 +131,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+
+NEO4J_USER = os.getenv('NEO4J_USER', 'neo4j')
+NEO4J_PASS = os.getenv('NEO4J_PASS', 'neo4jpass')
+
+TASKDB = os.getenv('TASKDB', 'taskdb')
+
+NEO4J_PROTOCOL = os.getenv('NEO4J_PROTOCOL', 'bolt')
+NEOMODEL_NEO4J_BOLT_URL = '{}://{}:{}@{}:7687'.format(NEO4J_PROTOCOL, NEO4J_USER, NEO4J_PASS, TASKDB)
+NEO4JDB = Graph("bolt://{0}:7687".format(TASKDB), auth=('neo4j', NEO4J_PASS), password=NEO4J_PASS)

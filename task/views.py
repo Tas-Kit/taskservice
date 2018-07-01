@@ -9,26 +9,9 @@ from task.models.user_node import UserNode
 from taskservice.schemas import Schema, Field
 from taskservice.constants import SUPER_ROLE
 from task.utils import preprocess, get_user_by_username, assert_uid_valid
-from django.contrib.auth.models import User
-from rest_framework_tracking.mixins import LoggingMixin
-# Create your views here.
 
 
-class UserView(LoggingMixin, APIView):
-
-    @preprocess
-    def get(self, request, user):
-        u = User.objects.get(pk=user.uid)
-        return Response({
-            'uid': user.uid,
-            'email': u.email,
-            'username': u.username,
-            'first_name': u.first_name,
-            'last_name': u.last_name
-        })
-
-
-class TaskTriggerView(LoggingMixin, APIView):
+class TaskTriggerView(APIView):
     schema = Schema(manual_fields=[
         Field(
             'sid',
@@ -43,7 +26,7 @@ class TaskTriggerView(LoggingMixin, APIView):
         return Response(task.get_graph())
 
 
-class TaskListView(LoggingMixin, APIView):
+class TaskListView(APIView):
     schema = Schema(manual_fields=[
         Field(
             'name',
@@ -92,7 +75,7 @@ class TaskListView(LoggingMixin, APIView):
         return Response(task.get_graph())
 
 
-class TaskChangeInvitationView(LoggingMixin, APIView):
+class TaskChangeInvitationView(APIView):
 
     schema = Schema(manual_fields=[
         Field(
@@ -120,7 +103,7 @@ class TaskChangeInvitationView(LoggingMixin, APIView):
         return Response('SUCCESS')
 
 
-class TaskRespondInvitationView(LoggingMixin, APIView):
+class TaskRespondInvitationView(APIView):
     schema = Schema(manual_fields=[
         Field(
             'acceptance',
@@ -135,7 +118,7 @@ class TaskRespondInvitationView(LoggingMixin, APIView):
         return Response('SUCCESS')
 
 
-class TaskRevokeInvitationView(LoggingMixin, APIView):
+class TaskRevokeInvitationView(APIView):
     schema = Schema(manual_fields=[
         Field(
             'uid',
@@ -152,7 +135,7 @@ class TaskRevokeInvitationView(LoggingMixin, APIView):
         return Response('SUCCESS')
 
 
-class TaskInvitationView(LoggingMixin, APIView):
+class TaskInvitationView(APIView):
     schema = Schema(manual_fields=[
         Field(
             'username',
@@ -174,21 +157,15 @@ class TaskInvitationView(LoggingMixin, APIView):
     @preprocess
     def post(self, request, user, task, username, super_role=SUPER_ROLE.STANDARD, role=None):
         target_user = get_user_by_username(username)
-        target_user_node = UserNode.get_or_create({'uid': target_user.id})[0]
+        target_user_node = UserNode.get_or_create({'uid': target_user['uid']})[0]
         user.invite(task, target_user_node, super_role, role)
         return Response({
-            'basic': {
-                'uid': str(target_user.id),
-                'email': target_user.email,
-                'username': target_user.username,
-                'first_name': target_user.first_name,
-                'last_name': target_user.last_name
-            },
+            'basic': target_user,
             'has_task': target_user_node.tasks.relationship(task).__properties__
         })
 
 
-class TaskCloneView(LoggingMixin, APIView):
+class TaskCloneView(APIView):
     schema = Schema(manual_fields=[
         Field(
             'task_info',
@@ -203,7 +180,7 @@ class TaskCloneView(LoggingMixin, APIView):
         return Response(new_task.get_graph())
 
 
-class TaskGraphView(LoggingMixin, APIView):
+class TaskGraphView(APIView):
     schema = Schema(manual_fields=[
         Field(
             'nodes',
@@ -234,7 +211,7 @@ class TaskGraphView(LoggingMixin, APIView):
         return Response(task.get_graph())
 
 
-class TaskDetailView(LoggingMixin, APIView):
+class TaskDetailView(APIView):
     schema = Schema(manual_fields=[
         Field(
             'name',
