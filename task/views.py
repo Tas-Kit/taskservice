@@ -6,9 +6,26 @@ from __future__ import unicode_literals
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from task.models.user_node import UserNode
+from task.models.task import TaskInst
 from taskservice.schemas import Schema, Field
 from taskservice.constants import SUPER_ROLE
 from task.utils import preprocess, get_user_by_username, assert_uid_valid
+
+
+class InternalTask(APIView):
+
+    def get(self, request, tid):
+        task = TaskInst.nodes.get(tid=tid)
+        return Response(task.__properties__)
+
+    def post(self, request, tid):
+        task = TaskInst.nodes.get(tid=tid)
+        return Response(task.clone().__properties__)
+
+    def delete(self, request, tid):
+        task = TaskInst.nodes.get(tid=tid)
+        task.delete()
+        return Response('SUCCESS')
 
 
 class TaskTriggerView(APIView):
