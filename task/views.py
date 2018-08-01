@@ -12,6 +12,16 @@ from taskservice.constants import SUPER_ROLE
 from task.utils import preprocess, get_user_by_username, assert_uid_valid
 
 
+class InternalDownload(APIView):
+
+    def post(self, request, tid):
+        uid = request.data['uid']
+        user = UserNode.get_or_create({'uid': uid})[0]
+        task = TaskInst.nodes.get(tid=tid)
+        new_task = user.clone_task(task)
+        return Response(new_task.__properties__)
+
+
 class InternalTask(APIView):
 
     def get(self, request, tid):
@@ -193,6 +203,7 @@ class TaskCloneView(APIView):
 
     @preprocess
     def post(self, request, user, task, task_info):
+        user.assert_accept(task)
         new_task = user.clone_task(task, task_info)
         return Response(new_task.get_graph())
 

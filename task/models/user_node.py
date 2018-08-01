@@ -90,7 +90,6 @@ class UserNode(StructuredNode):
         user.tasks.disconnect(task)
 
     def clone_task(self, task, task_info):
-        self.assert_accept(task)
         new_task = task.clone(task_info)
         has_task_param = {
             'super_role': SUPER_ROLE.OWNER,
