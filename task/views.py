@@ -36,10 +36,7 @@ class InternalTask(APIView):
         return Response(task.clone().__properties__)
 
     def delete(self, request, tid):
-        uid = request.data['uid']
-        user = UserNode.get_or_create({'uid': uid})[0]
-        task = user.tasks.get(tid=tid)
-        user.assert_owner(task)
+        task = TaskInst.nodes.get(tid=tid)
         task.delete()
         return Response('SUCCESS')
 
