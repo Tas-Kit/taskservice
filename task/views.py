@@ -29,11 +29,17 @@ class InternalTask(APIView):
         return Response(task.__properties__)
 
     def post(self, request, tid):
-        task = TaskInst.nodes.get(tid=tid)
+        uid = request.data['uid']
+        user = UserNode.get_or_create({'uid': uid})[0]
+        task = user.tasks.get(tid=tid)
+        user.assert_owner(task)
         return Response(task.clone().__properties__)
 
     def delete(self, request, tid):
-        task = TaskInst.nodes.get(tid=tid)
+        uid = request.data['uid']
+        user = UserNode.get_or_create({'uid': uid})[0]
+        task = user.tasks.get(tid=tid)
+        user.assert_owner(task)
         task.delete()
         return Response('SUCCESS')
 
