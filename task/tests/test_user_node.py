@@ -96,14 +96,19 @@ class TestUserNode(TestCase):
         user.trigger(MagicMock(), 'any sid')
         mock_assert_accept.assert_called_once()
 
+    @patch('task.models.user_node.UserNode.assert_accept')
     @patch('neomodel.RelationshipManager.connect')
-    def test_clone(self, mock_connect):
+    def test_clone(self, mock_connect, mock_accept):
         user = UserNode()
-        new_task = user.clone_task(MagicMock(), {})
+        task = MagicMock()
+        task.assert_original = MagicMock()
+        new_task = user.clone_task(task, {})
         mock_connect.assert_called_once_with(new_task, {
             'super_role': SUPER_ROLE.OWNER,
             'acceptance': ACCEPTANCE.ACCEPT
         })
+        mock_accept.assert_called_once_with(task)
+        task.assert_original.assert_called_once()
 
     @patch('task.models.user_node.UserNode.assert_accept')
     @patch('task.models.user_node.UserNode.assert_admin')

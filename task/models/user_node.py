@@ -43,6 +43,16 @@ class UserNode(StructuredNode):
         if has_task.super_role == SUPER_ROLE.OWNER:
             raise OwnerCannotChangeInvitation()
 
+    def upload(self, task, app_id):
+        """
+        Upload a task to Tastore
+        """
+        self.assert_owner(task)
+        task.assert_original()
+        new_task = task.clone()
+        new_task.set_app_id(app_id)
+        return new_task
+
     def trigger(self, task, sid):
         self.assert_accept(task)
         step = task.steps.get(sid=sid)
@@ -90,6 +100,8 @@ class UserNode(StructuredNode):
         user.tasks.disconnect(task)
 
     def clone_task(self, task, task_info):
+        self.assert_accept(task)
+        task.assert_original()
         new_task = task.clone(task_info)
         has_task_param = {
             'super_role': SUPER_ROLE.OWNER,
