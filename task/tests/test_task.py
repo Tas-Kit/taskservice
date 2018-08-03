@@ -38,29 +38,26 @@ class TestTask(TestCase):
             'to': 'node2'
         }], processed_edges)
 
-    @patch('task.models.task.TaskInst.set_app_id')
     @patch('task.models.task.TaskInst.clone')
     @patch('task.models.task.TaskInst.assert_original')
     @patch('task.models.user_node.UserNode.assert_owner')
-    def test_upload(self, mock_assert_owner, mock_assert_original, mock_clone, mock_set_app_id):
+    def test_upload(self, mock_assert_owner, mock_assert_original, mock_clone):
         user = UserNode()
         task = TaskInst()
         new_task = TaskInst()
         mock_clone.return_value = new_task
-        app_id = 'app_id'
-        result = user.upload(task, app_id)
+        result = user.upload(task)
         self.assertTrue(new_task is result)
         mock_assert_original.assert_called_once()
         mock_assert_owner.assert_called_once()
         mock_clone.assert_called_once()
-        mock_set_app_id.assert_called_once_with('app_id')
 
     @patch('taskservice.utils.userservice.get_user_list', return_value=[])
     def test_clone(self, mock_get_user):
         user = UserNode(uid='sample').save()
         task = user.create_task('task')
         task.status = STATUS.IN_PROGRESS
-        task.set_app_id('app_id')
+        task.set_origin_id('origin_id')
         step = StepInst(name='step', status=STATUS.IN_PROGRESS).save()
         start = task.steps.get(node_type=NODE_TYPE.START)
         end = task.steps.get(node_type=NODE_TYPE.END)
@@ -70,7 +67,7 @@ class TestTask(TestCase):
         new_task = task.clone()
         self.assertEqual(new_task.name, task.name)
         self.assertEqual(new_task.status, STATUS.NEW)
-        self.assertEqual(new_task.app_id, 'app_id')
+        self.assertEqual(new_task.origin_id, 'origin_id')
         new_start = new_task.steps.get(node_type=NODE_TYPE.START)
         new_step = new_task.steps.get(node_type=NODE_TYPE.NORMAL)
         new_end = new_task.steps.get(node_type=NODE_TYPE.END)
@@ -95,17 +92,17 @@ class TestTask(TestCase):
         task_info = {
             'id': 'test id',
             'tid': 'test tid',
-            'app_id': 'test_app_id',
+            'origin_id': 'test_origin_id',
             'name': 'new task',
             'deadline': t,
             'description': 'new description',
             'roles': ['role1', 'role2']
         }
-        task = TaskInst(roles=['role2', 'role3'], app_id='old_app_id')
+        task = TaskInst(roles=['role2', 'role3'], origin_id='old_origin_id')
         task.update(task_info)
         self.assertEqual('new task', task.name)
         self.assertEqual('new description', task.description)
-        self.assertEqual('old_app_id', task.app_id)
+        self.assertEqual('old_origin_id', task.origin_id)
         self.assertEqual(['role1', 'role2'], task.roles)
         self.assertEqual(['role1', 'role2'], task.roles)
         self.assertFalse(hasattr(task, 'id'))
@@ -205,22 +202,22 @@ class TestTask(TestCase):
         mock_add_nodes.assert_called_once()
 
     def test_assert_original(self):
-        task = TaskInst(app_id='abc')
+        task = TaskInst(origin_id='abc')
         with self.assertRaises(BadRequest):
             task.assert_original()
 
     @patch('neomodel.StructuredNode.save')
-    def test_set_app_id(self, mock_save):
+    def test_set_origin_id(self, mock_save):
         task = TaskInst()
-        task.set_app_id(None)
+        task.set_origin_id(None)
         mock_save.assert_not_called()
 
-        task.set_app_id('abcd')
+        task.set_origin_id('abcd')
         mock_save.assert_called_once()
-        self.assertEqual(task.app_id, 'abcd')
+        self.assertEqual(task.origin_id, 'abcd')
 
-        task.set_app_id('dcba')
-        self.assertEqual(task.app_id, 'abcd')
+        task.set_origin_id('dcba')
+        self.assertEqual(task.origin_id, 'abcd')
         mock_save.assert_called_once()
 
     @patch('neomodel.StructuredNode.save')

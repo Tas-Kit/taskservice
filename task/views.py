@@ -19,18 +19,14 @@ class InternalDownload(APIView):
         user = UserNode.get_or_create({'uid': uid})[0]
         task = TaskInst.nodes.get(tid=tid)
         new_task = user.clone_task(task)
+        new_task.set_origin_id(tid)
         return Response(new_task.__properties__)
 
 
 class InternalTask(APIView):
     schema = Schema(manual_fields=[
         Field(
-            'app_id',
-            method='POST',
-            required=True
-        ),
-        Field(
-            'tid',
+            'uid',
             method='POST',
             required=True
         )
@@ -42,10 +38,9 @@ class InternalTask(APIView):
 
     def post(self, request, tid):
         uid = request.data['uid']
-        app_id = request.data['app_id']
         user = UserNode.get_or_create({'uid': uid})[0]
         task = user.tasks.get(tid=tid)
-        new_task = user.upload(task, app_id)
+        new_task = user.upload(task)
         return Response(new_task.__properties__)
 
     def delete(self, request, tid):

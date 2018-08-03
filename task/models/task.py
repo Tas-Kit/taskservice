@@ -33,7 +33,7 @@ class TaskModel(StructuredNode):
         steps (TYPE): Description
     """
 
-    app_id = StringProperty()
+    origin_id = StringProperty()
     name = StringProperty(required=True)
     description = StringProperty()
     expected_effort_num = FloatProperty()
@@ -44,7 +44,7 @@ class TaskModel(StructuredNode):
     steps = RelationshipTo(StepInst, 'HasStep', model=HasStep)
 
     def assert_original(self):
-        if self.app_id is not None:
+        if self.origin_id is not None:
             raise BadRequest('This app is not ')
 
     def assert_role(self, role):
@@ -96,9 +96,9 @@ class TaskModel(StructuredNode):
         }
         return data
 
-    def set_app_id(self, app_id):
-        if app_id is not None and self.app_id is None:
-            self.app_id = app_id
+    def set_origin_id(self, origin_id):
+        if origin_id is not None and self.origin_id is None:
+            self.origin_id = origin_id
             self.save()
 
     def clone(self, task_info=None):
@@ -115,7 +115,7 @@ class TaskModel(StructuredNode):
         utils.reset_nodes_status(nodes)
         task = TaskInst(name=self.name + ' copy').save()
         task_info['status'] = STATUS.NEW
-        task.app_id = task_info['app_id']
+        task.origin_id = task_info['origin_id']
         task.save_graph(nodes, edges, task_info)
         return task
 
@@ -189,8 +189,8 @@ class TaskModel(StructuredNode):
                 del task_info['id']
             if 'tid' in task_info:
                 del task_info['tid']
-            if 'app_id' in task_info:
-                del task_info['app_id']
+            if 'origin_id' in task_info:
+                del task_info['origin_id']
             if 'deadline' in task_info:
                 utils.update_datetime(self, 'deadline', task_info)
             old_roles = self.roles
