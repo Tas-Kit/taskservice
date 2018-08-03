@@ -57,7 +57,6 @@ class TestTask(TestCase):
         user = UserNode(uid='sample').save()
         task = user.create_task('task')
         task.status = STATUS.IN_PROGRESS
-        task.set_origin_id('origin_id')
         step = StepInst(name='step', status=STATUS.IN_PROGRESS).save()
         start = task.steps.get(node_type=NODE_TYPE.START)
         end = task.steps.get(node_type=NODE_TYPE.END)
@@ -67,7 +66,6 @@ class TestTask(TestCase):
         new_task = task.clone()
         self.assertEqual(new_task.name, task.name)
         self.assertEqual(new_task.status, STATUS.NEW)
-        self.assertEqual(new_task.origin_id, 'origin_id')
         new_start = new_task.steps.get(node_type=NODE_TYPE.START)
         new_step = new_task.steps.get(node_type=NODE_TYPE.NORMAL)
         new_end = new_task.steps.get(node_type=NODE_TYPE.END)
@@ -92,23 +90,20 @@ class TestTask(TestCase):
         task_info = {
             'id': 'test id',
             'tid': 'test tid',
-            'origin_id': 'test_origin_id',
             'name': 'new task',
             'deadline': t,
             'description': 'new description',
             'roles': ['role1', 'role2']
         }
-        task = TaskInst(roles=['role2', 'role3'], origin_id='old_origin_id')
+        task = TaskInst(name='hello', roles=['role2', 'role3'])
         task.update(task_info)
         self.assertEqual('new task', task.name)
         self.assertEqual('new description', task.description)
-        self.assertEqual('old_origin_id', task.origin_id)
         self.assertEqual(['role1', 'role2'], task.roles)
         self.assertEqual(['role1', 'role2'], task.roles)
         self.assertFalse(hasattr(task, 'id'))
         self.assertNotEqual('test tid', task.tid)
         self.assertEqual(parse(t), task.deadline)
-        mock_save.assert_called_once()
         mock_update_roles.assert_called_once_with(['role2', 'role3'])
 
     @patch('neomodel.StructuredNode.save')
@@ -202,23 +197,13 @@ class TestTask(TestCase):
         mock_add_nodes.assert_called_once()
 
     def test_assert_original(self):
-        task = TaskInst(origin_id='abc')
+        task = TaskInst(name='name').save()
+        task.assert_original()
+        new_task = TaskInst(name='new').save()
+        new_task.set_origin(task)
+        task.assert_original()
         with self.assertRaises(BadRequest):
-            task.assert_original()
-
-    @patch('neomodel.StructuredNode.save')
-    def test_set_origin_id(self, mock_save):
-        task = TaskInst()
-        task.set_origin_id(None)
-        mock_save.assert_not_called()
-
-        task.set_origin_id('abcd')
-        mock_save.assert_called_once()
-        self.assertEqual(task.origin_id, 'abcd')
-
-        task.set_origin_id('dcba')
-        self.assertEqual(task.origin_id, 'abcd')
-        mock_save.assert_called_once()
+            new_task.assert_original()
 
     @patch('neomodel.StructuredNode.save')
     def test_start(self, mock_save):

@@ -19,7 +19,7 @@ class InternalDownload(APIView):
         user = UserNode.get_or_create({'uid': uid})[0]
         task = TaskInst.nodes.get(tid=tid)
         new_task = user.clone_task(task)
-        new_task.set_origin_id(tid)
+        new_task.set_origin(task)
         return Response(new_task.__properties__)
 
 

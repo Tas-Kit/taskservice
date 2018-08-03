@@ -9,9 +9,10 @@ from neomodel import (
     UniqueIdProperty,
     RelationshipTo,
     RelationshipFrom,
-    db
+    db,
 )
 from relationships import HasStep, HasTask
+from neomodel.cardinality import ZeroOrOne
 from taskservice.constants import STATUS, TIME_UNITS, STATUS_LIST
 import utils
 from step import StepInst
@@ -33,7 +34,8 @@ class TaskModel(StructuredNode):
         steps (TYPE): Description
     """
 
-    origin_id = StringProperty()
+    origin = RelationshipTo('TaskModel',
+                            'Origin', cardinality=ZeroOrOne)
     name = StringProperty(required=True)
     description = StringProperty()
     expected_effort_num = FloatProperty()
@@ -44,8 +46,8 @@ class TaskModel(StructuredNode):
     steps = RelationshipTo(StepInst, 'HasStep', model=HasStep)
 
     def assert_original(self):
-        if self.origin_id is not None:
-            raise BadRequest('This app is not ')
+        if len(self.origin.all()) > 0:
+            raise BadRequest('This task is not original')
 
     def assert_role(self, role):
         if role is not None and role not in self.roles:
@@ -96,10 +98,10 @@ class TaskModel(StructuredNode):
         }
         return data
 
-    def set_origin_id(self, origin_id):
-        if origin_id is not None and self.origin_id is None:
-            self.origin_id = origin_id
-            self.save()
+    def set_origin(self, origin_task):
+        self.assert_original()
+        origin_task.assert_original()
+        self.origin.connect(origin_task)
 
     def clone(self, task_info=None):
         """clone all the step model data and relations
@@ -115,7 +117,6 @@ class TaskModel(StructuredNode):
         utils.reset_nodes_status(nodes)
         task = TaskInst(name=self.name + ' copy').save()
         task_info['status'] = STATUS.NEW
-        task.origin_id = task_info['origin_id']
         task.save_graph(nodes, edges, task_info)
         return task
 
@@ -189,8 +190,6 @@ class TaskModel(StructuredNode):
                 del task_info['id']
             if 'tid' in task_info:
                 del task_info['tid']
-            if 'origin_id' in task_info:
-                del task_info['origin_id']
             if 'deadline' in task_info:
                 utils.update_datetime(self, 'deadline', task_info)
             old_roles = self.roles
