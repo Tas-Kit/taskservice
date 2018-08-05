@@ -25,8 +25,7 @@ class InternalDownload(APIView):
         uid = request.data['uid']
         user = UserNode.get_or_create({'uid': uid})[0]
         task = TaskInst.nodes.get(tid=tid)
-        new_task = user.clone_task(task)
-        new_task.set_origin(task)
+        new_task = user.download(task)
         return Response(new_task.__properties__)
 
 
@@ -36,7 +35,12 @@ class InternalTask(APIView):
             'uid',
             method='POST',
             required=True
-        )
+        ),
+        Field(
+            'target_tid',
+            method='POST',
+            required=False
+        ),
     ])
 
     def get(self, request, tid):
@@ -44,11 +48,16 @@ class InternalTask(APIView):
         return Response(task.__properties__)
 
     def post(self, request, tid):
+        print 'request.data', request.data
         uid = request.data['uid']
         user = UserNode.get_or_create({'uid': uid})[0]
         task = user.tasks.get(tid=tid)
-        new_task = user.upload(task)
-        return Response(new_task.__properties__)
+        target_task = None
+        if 'target_tid' in request.data:
+            target_tid = request.data['target_tid']
+            target_task = TaskInst.nodes.get(tid=target_tid)
+        task = user.upload(task, target_task)
+        return Response(task.__properties__)
 
     def delete(self, request, tid):
         task = TaskInst.nodes.get(tid=tid)

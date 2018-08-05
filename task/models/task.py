@@ -49,6 +49,10 @@ class TaskModel(StructuredNode):
         if len(self.origin.all()) > 0:
             raise BadRequest('This task is not original')
 
+    def assert_no_user(self):
+        if len(self.users.all()) > 0:
+            raise BadRequest('This task is not a valid task in Tastore')
+
     def assert_role(self, role):
         if role is not None and role not in self.roles:
             raise NoSuchRole(role)
@@ -213,6 +217,13 @@ class TaskModel(StructuredNode):
                 new_edges.append(edge)
                 edge_set.add(edge['from'] + edge['to'])
         return new_edges
+
+    def upgrade_graph(self, task):
+        data = task.get_graph()
+        nodes = data['nodes']
+        edges = data['edges']
+        task_info = data['task_info']
+        self.save_graph(nodes, edges, task_info)
 
     @db.transaction
     def save_graph(self, nodes, edges, task_info=None):

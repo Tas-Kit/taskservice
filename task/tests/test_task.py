@@ -38,10 +38,15 @@ class TestTask(TestCase):
             'to': 'node2'
         }], processed_edges)
 
+    @patch('task.models.task.TaskInst.upgrade_graph')
     @patch('task.models.task.TaskInst.clone')
     @patch('task.models.task.TaskInst.assert_original')
     @patch('task.models.user_node.UserNode.assert_owner')
-    def test_upload(self, mock_assert_owner, mock_assert_original, mock_clone):
+    def test_upload(self,
+                    mock_assert_owner,
+                    mock_assert_original,
+                    mock_clone,
+                    mock_upgrade_graph):
         user = UserNode()
         task = TaskInst()
         new_task = TaskInst()
@@ -49,8 +54,28 @@ class TestTask(TestCase):
         result = user.upload(task)
         self.assertTrue(new_task is result)
         mock_assert_original.assert_called_once()
-        mock_assert_owner.assert_called_once()
+        mock_assert_owner.assert_called_once_with(task)
         mock_clone.assert_called_once()
+        mock_upgrade_graph.assert_not_called()
+
+    @patch('task.models.task.TaskInst.upgrade_graph')
+    @patch('task.models.task.TaskInst.clone')
+    @patch('task.models.task.TaskInst.assert_original')
+    @patch('task.models.user_node.UserNode.assert_owner')
+    def test_upload_existing_task(self,
+                                  mock_assert_owner,
+                                  mock_assert_original,
+                                  mock_clone,
+                                  mock_upgrade_graph):
+        user = UserNode()
+        task = TaskInst()
+        target_task = TaskInst()
+        new_task = user.upload(task, target_task)
+        self.assertIs(new_task, target_task)
+        mock_assert_owner.assert_called_once_with(task)
+        mock_assert_original.assert_called_once()
+        mock_clone.assert_not_called()
+        mock_upgrade_graph.assert_called_once()
 
     @patch('taskservice.utils.userservice.get_user_list', return_value=[])
     def test_clone(self, mock_get_user):
@@ -195,6 +220,29 @@ class TestTask(TestCase):
         mock_change_nodes.assert_called_once()
         mock_add_edges.assert_called_once()
         mock_add_nodes.assert_called_once()
+
+    def test_upgrade_graph(self):
+        data = {
+            'nodes': 'abc',
+            'edges': 'def',
+            'task_info': 'ghi'
+        }
+        t1 = TaskInst()
+        t2 = TaskInst()
+        t1.save_graph = MagicMock()
+        t2.get_graph = MagicMock(return_value=data)
+        t1.upgrade_graph(t2)
+        t2.get_graph.assert_called_once()
+        t1.save_graph.assert_called_once_with('abc', 'def', 'ghi')
+
+    def test_assert_no_user(self):
+        user = UserNode(uid='abc').save()
+        task = user.create_task(name='name')
+        with self.assertRaises(BadRequest):
+            task.assert_no_user()
+
+        task = TaskInst(name='name').save()
+        task.assert_no_user()
 
     def test_assert_original(self):
         task = TaskInst(name='name').save()

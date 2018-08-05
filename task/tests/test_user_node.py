@@ -64,6 +64,19 @@ class TestUserNode(TestCase):
         with self.assertRaises(BadRequest):
             user2.assert_has_higher_permission(task, user1)
 
+    @patch('task.models.user_node.UserNode.clone_task')
+    @patch('task.models.task.TaskModel.assert_no_user')
+    def test_download(self, mock_assert_no_user, mock_clone_task):
+        user = UserNode()
+        task = TaskInst()
+        new_task = MagicMock()
+        mock_clone_task.return_value = new_task
+        result = user.download(task)
+        self.assertEqual(new_task, result)
+        mock_assert_no_user.assert_called_once()
+        mock_clone_task.assert_called_once_with(task)
+        new_task.set_origin.assert_called_once_with(task)
+
     @patch('task.models.task.TaskModel.delete')
     @patch('task.models.user_node.UserNode.assert_owner')
     def test_delete_task(self, mock_assert_owner, mock_delete):
