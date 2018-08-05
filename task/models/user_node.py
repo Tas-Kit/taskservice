@@ -98,8 +98,7 @@ class UserNode(StructuredNode):
         self.assert_has_higher_permission(task, user)
         user.tasks.disconnect(task)
 
-    def clone_task(self, task, task_info):
-        self.assert_accept(task)
+    def clone_task(self, task, task_info=None):
         task.assert_original()
         new_task = task.clone(task_info)
         has_task_param = {

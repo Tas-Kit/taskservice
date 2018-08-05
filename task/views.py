@@ -13,6 +13,13 @@ from task.utils import preprocess, get_user_by_username, assert_uid_valid
 
 
 class InternalDownload(APIView):
+    schema = Schema(manual_fields=[
+        Field(
+            'uid',
+            method='POST',
+            required=True
+        )
+    ])
 
     def post(self, request, tid):
         uid = request.data['uid']
@@ -214,6 +221,7 @@ class TaskCloneView(APIView):
 
     @preprocess
     def post(self, request, user, task, task_info):
+        user.assert_accept(task)
         new_task = user.clone_task(task, task_info)
         return Response(new_task.get_graph())
 
