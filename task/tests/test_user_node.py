@@ -106,8 +106,22 @@ class TestUserNode(TestCase):
     @patch('task.models.user_node.UserNode.assert_accept')
     def test_trigger(self, mock_assert_accept, mock_relationship):
         user = UserNode()
-        user.trigger(MagicMock(), 'any sid')
+        task = MagicMock()
+        task.steps = MagicMock()
+        user.trigger(task, 'any sid')
         mock_assert_accept.assert_called_once()
+        task.steps.get.assert_called_once_with(
+            sid='any sid')
+
+    @patch('neomodel.RelationshipManager.relationship', return_value=MagicMock())
+    @patch('task.models.user_node.UserNode.assert_accept')
+    def test_trigger_start(self, mock_assert_accept, mock_relationship):
+        user = UserNode()
+        task = MagicMock()
+        task.steps = MagicMock()
+        user.trigger(task)
+        mock_assert_accept.assert_called_once()
+        task.steps.get.assert_called_once_with(node_type=NODE_TYPE.START)
 
     @patch('neomodel.RelationshipManager.connect')
     def test_clone(self, mock_connect):

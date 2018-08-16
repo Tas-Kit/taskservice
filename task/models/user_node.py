@@ -67,9 +67,12 @@ class UserNode(StructuredNode):
             new_task = target_task
         return new_task
 
-    def trigger(self, task, sid):
+    def trigger(self, task, sid=None):
         self.assert_accept(task)
-        step = task.steps.get(sid=sid)
+        if sid is None:
+            step = task.steps.get(node_type=NODE_TYPE.START)
+        else:
+            step = task.steps.get(sid=sid)
         has_task = self.tasks.relationship(task)
         step.trigger(role=has_task.role)
 

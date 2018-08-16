@@ -70,12 +70,12 @@ class TaskTriggerView(APIView):
         Field(
             'sid',
             method='POST',
-            required=True
+            required=False
         )
     ])
 
     @preprocess
-    def post(self, request, user, task, sid):
+    def post(self, request, user, task, sid=None):
         user.trigger(task, sid)
         return Response(task.get_graph())
 
