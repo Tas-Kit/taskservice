@@ -26,7 +26,7 @@ class InternalDownload(APIView):
         user = UserNode.get_or_create({'uid': uid})[0]
         task = TaskInst.nodes.get(tid=tid)
         new_task = user.download(task)
-        return Response(new_task.__properties__)
+        return Response(new_task.get_info())
 
 
 class InternalTask(APIView):
@@ -45,7 +45,7 @@ class InternalTask(APIView):
 
     def get(self, request, tid):
         task = TaskInst.nodes.get(tid=tid)
-        return Response(task.__properties__)
+        return Response(task.get_info())
 
     def post(self, request, tid):
         print 'request.data', request.data
@@ -57,7 +57,7 @@ class InternalTask(APIView):
             target_tid = request.data['target_tid']
             target_task = TaskInst.nodes.get(tid=target_tid)
         task = user.upload(task, target_task)
-        return Response(task.__properties__)
+        return Response(task.get_info())
 
     def delete(self, request, tid):
         task = TaskInst.nodes.get(tid=tid)
@@ -117,7 +117,7 @@ class TaskListView(APIView):
     def get(self, request, user):
         return Response({
             task.tid: {
-                'task': task.__properties__,
+                'task': task.get_info(),
                 'has_task': user.tasks.relationship(task).__properties__
             }
             for task in user.tasks
@@ -300,12 +300,12 @@ class TaskDetailView(APIView):
 
     @preprocess
     def get(self, request, user, task):
-        return Response(task.__properties__)
+        return Response(task.get_info())
 
     @preprocess
     def patch(self, request, user, task, **task_info):
         user.update_task(task, task_info)
-        return Response(task.__properties__)
+        return Response(task.get_info())
 
     @preprocess
     def delete(self, request, user, task):

@@ -13,6 +13,24 @@ from dateutil.parser import parse
 
 class TestTask(TestCase):
 
+    def test_get_info_origin(self):
+        task = TaskInst()
+        task.origin = MagicMock()
+        origin_task = MagicMock()
+        origin_task.tid = 'hello'
+        task.origin.all = MagicMock(return_value=[origin_task])
+        origin = task.get_origin()
+        self.assertEqual(origin_task, origin)
+        info = task.get_info()
+        info['tid'] = 'hello'
+
+    def test_get_info_no_origin(self):
+        task = TaskInst()
+        task.origin = MagicMock()
+        task.origin.all = MagicMock(return_value=[])
+        origin = task.get_origin()
+        self.assertIs(None, origin)
+
     def test_preprocess_edges(self):
         sample_edges = [
             {

@@ -1,5 +1,5 @@
-"""Summary
-"""
+from copy import deepcopy
+
 from neomodel import (
     StructuredNode,
     StringProperty,
@@ -34,7 +34,7 @@ class TaskModel(StructuredNode):
         steps (TYPE): Description
     """
 
-    origin = RelationshipTo('TaskModel',
+    origin = RelationshipTo('TaskInst',
                             'Origin', cardinality=ZeroOrOne)
     name = StringProperty(required=True)
     description = StringProperty()
@@ -56,6 +56,12 @@ class TaskModel(StructuredNode):
     def assert_role(self, role):
         if role is not None and role not in self.roles:
             raise NoSuchRole(role)
+
+    def get_origin(self):
+        origin = self.origin.all()
+        if len(origin) > 0:
+            return origin[0]
+        return None
 
     def delete(self):
         for step in self.steps:
@@ -98,7 +104,7 @@ class TaskModel(StructuredNode):
             'nodes': nodes,
             'edges': edges,
             'users': users,
-            'task_info': self.__properties__
+            'task_info': self.get_info()
         }
         return data
 
@@ -123,6 +129,13 @@ class TaskModel(StructuredNode):
         task_info['status'] = STATUS.NEW
         task.save_graph(nodes, edges, task_info)
         return task
+
+    def get_info(self):
+        info = deepcopy(self.__properties__)
+        origin = self.get_origin()
+        if origin is not None:
+            info['origin'] = origin.tid
+        return info
 
     def remove_edges(self, edges):
         for from_sid, to_sid in edges:
