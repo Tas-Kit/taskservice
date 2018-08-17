@@ -129,6 +129,13 @@ class TaskListView(APIView):
         return Response(task.get_graph())
 
 
+class TodoListView(APIView):
+
+    @preprocess
+    def get(self, request, user):
+        return Response(user.get_todo_list())
+
+
 class TaskChangeInvitationView(APIView):
 
     schema = Schema(manual_fields=[

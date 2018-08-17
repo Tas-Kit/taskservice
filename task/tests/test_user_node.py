@@ -3,9 +3,10 @@ from __future__ import unicode_literals
 
 from django.test import TestCase
 from mock import patch, MagicMock
-from taskservice.constants import SUPER_ROLE, ACCEPTANCE, NODE_TYPE
+from taskservice.constants import SUPER_ROLE, ACCEPTANCE, NODE_TYPE, STATUS
 from task.models.user_node import UserNode
 from task.models.task import TaskInst
+from task.models.step import StepInst
 from task.models.relationships import HasTask
 from taskservice.exceptions import (
     NotAdmin,
@@ -63,6 +64,40 @@ class TestUserNode(TestCase):
         user2.tasks.connect(task, {'acceptance': ACCEPTANCE.ACCEPT})
         with self.assertRaises(BadRequest):
             user2.assert_has_higher_permission(task, user1)
+
+    def test_get_todo_list(self):
+        user = UserNode(uid='test_get_todo_list').save()
+        task1 = user.create_task('t1')
+        task2 = user.create_task('t2')
+        task3 = user.create_task('t3')
+
+        self.assertEqual([], user.get_todo_list())
+        task1.status = STATUS.IN_PROGRESS
+        task2.status = STATUS.IN_PROGRESS
+        task3.status = STATUS.COMPLETED
+        task1.save()
+        task2.save()
+        task3.save()
+
+        step1_1 = StepInst(name='s1_1', status=STATUS.COMPLETED).save()
+        step1_2 = StepInst(name='s1_2', status=STATUS.IN_PROGRESS).save()
+        step2_1 = StepInst(name='s2_1', status=STATUS.READY_FOR_REVIEW).save()
+        step2_2 = StepInst(name='s2_2', status=STATUS.SKIPPED).save()
+        step3_1 = StepInst(name='s3_1', status=STATUS.IN_PROGRESS).save()
+        step3_2 = StepInst(name='s3_2', status=STATUS.READY_FOR_REVIEW).save()
+
+        task1.steps.connect(step1_1)
+        task1.steps.connect(step1_2)
+        task2.steps.connect(step2_1)
+        task2.steps.connect(step2_2)
+        task3.steps.connect(step3_1)
+        task3.steps.connect(step3_2)
+
+        todo_list = user.get_todo_list()
+        todo_set = set(todo['task']['tid'] + todo['step']['sid'] for todo in todo_list)
+        self.assertEqual(2, len(todo_set))
+        self.assertIn(task1.tid + step1_2.sid, todo_set)
+        self.assertIn(task2.tid + step2_1.sid, todo_set)
 
     @patch('task.models.user_node.UserNode.clone_task')
     @patch('task.models.task.TaskModel.assert_no_user')

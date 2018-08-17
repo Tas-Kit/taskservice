@@ -38,6 +38,9 @@ class StepInst(StepModel):
     sid = UniqueIdProperty()
     status = StringProperty(default=STATUS.NEW, choices=STATUS_LIST)
 
+    def get_info(self):
+        return self.__properties__
+
     def update(self, data):
         if 'sid' in data:
             del data['sid']

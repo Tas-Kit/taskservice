@@ -2,7 +2,7 @@ from neomodel import StructuredNode, StringProperty, RelationshipTo, db
 from relationships import HasTask
 from task import TaskInst
 from step import StepInst
-from taskservice.constants import SUPER_ROLE, ACCEPTANCE, NODE_TYPE, START_END_OFFSET
+from taskservice.constants import SUPER_ROLE, ACCEPTANCE, NODE_TYPE, START_END_OFFSET, STATUS
 from taskservice.exceptions import NotOwner, NotAdmin, NotAccept, AlreadyHasTheTask, OwnerCannotChangeInvitation, BadRequest
 
 
@@ -42,6 +42,27 @@ class UserNode(StructuredNode):
     def assert_not_owner(self, has_task):
         if has_task.super_role == SUPER_ROLE.OWNER:
             raise OwnerCannotChangeInvitation()
+
+    def get_todo_list(self):
+        query = """MATCH(
+                    (user:UserNode{{uid:'{uid}'}})
+                    -[:HasTask{{acceptance:'{accept}'}}]->
+                    (task:TaskInst{{status:'{in_progress}'}})
+                    -[:HasStep]->(step:StepInst)
+                )
+                WHERE step.status='{in_progress}' OR step.status='{ready_for_review}'
+                RETURN task, step"""
+        query = query.format(uid=self.uid,
+                             in_progress=STATUS.IN_PROGRESS,
+                             ready_for_review=STATUS.READY_FOR_REVIEW,
+                             accept=ACCEPTANCE.ACCEPT)
+        results, meta = db.cypher_query(query)
+
+        todo_list = [{
+            'step': StepInst.inflate(step).get_info(),
+            'task': TaskInst.inflate(task).get_info()
+        } for task, step in results]
+        return todo_list
 
     def download(self, task):
         """
