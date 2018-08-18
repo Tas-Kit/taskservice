@@ -218,30 +218,35 @@ class TestUserNode(TestCase):
         with self.assertRaises(OwnerCannotChangeInvitation):
             user.respond_invitation(task, ACCEPTANCE.WAITING)
 
-    @patch('neomodel.StructuredRel.save')
-    def test_change_invitation_change_owner(self, mock_save):
-        mock_owner_has_task = HasTask(super_role=SUPER_ROLE.OWNER, acceptance=ACCEPTANCE.ACCEPT)
-        mock_user_has_task = HasTask(super_role=SUPER_ROLE.STANDARD, acceptance=ACCEPTANCE.ACCEPT)
-        user = UserNode()
-        task = TaskInst()
-        target_user = UserNode()
-        user.tasks.relationship = MagicMock(return_value=mock_owner_has_task)
-        target_user.tasks.relationship = MagicMock(return_value=mock_user_has_task)
-        user.change_invitation(task, target_user, super_role=SUPER_ROLE.OWNER)
-        self.assertEqual(SUPER_ROLE.OWNER, mock_user_has_task.super_role)
-        self.assertEqual(SUPER_ROLE.ADMIN, mock_owner_has_task.super_role)
+    def test_change_role(self):
+        user = UserNode(uid='test_change_role').save()
+        task = user.create_task('task', {'roles': ['teacher', 'student']})
+        user_has_task = user.tasks.relationship(task)
+        user_has_task.super_role = SUPER_ROLE.STANDARD
+        user_has_task.save()
+        with self.assertRaises(NotAdmin):
+            user.change_role(task, user, 'teacher')
+        user_has_task.super_role = SUPER_ROLE.ADMIN
+        user_has_task.save()
+        user.change_role(task, user, 'teacher')
+        user_has_task = user.tasks.relationship(task)
+        self.assertEqual('teacher', user_has_task.role)
+        with self.assertRaises(NoSuchRole):
+            user.change_role(task, user, 'parent')
 
-    @patch('neomodel.StructuredRel.save')
-    def test_change_invitation_change_owner_user_not_accepted(self, mock_save):
-        mock_owner_has_task = HasTask(super_role=SUPER_ROLE.OWNER, acceptance=ACCEPTANCE.ACCEPT)
-        mock_user_has_task = HasTask(super_role=SUPER_ROLE.STANDARD, acceptance=ACCEPTANCE.WAITING)
-        user = UserNode()
-        task = TaskInst()
-        target_user = UserNode()
-        user.tasks.relationship = MagicMock(return_value=mock_owner_has_task)
-        target_user.tasks.relationship = MagicMock(return_value=mock_user_has_task)
+    def test_change_task_owner(self):
+        user1 = UserNode(uid='test_change_task_owner_1').save()
+        task = user1.create_task('task')
+        user2 = UserNode(uid='test_change_task_owner_2').save()
+        user2.tasks.connect(task)
         with self.assertRaises(NotAccept):
-            user.change_invitation(task, target_user, super_role=SUPER_ROLE.OWNER)
+            user1.change_super_role(task, user2, SUPER_ROLE.OWNER)
+        user2.respond_invitation(task, ACCEPTANCE.ACCEPT)
+        user1.change_super_role(task, user2, SUPER_ROLE.OWNER)
+        user1_has_task = user1.tasks.relationship(task)
+        user2_has_task = user2.tasks.relationship(task)
+        self.assertEqual(SUPER_ROLE.ADMIN, user1_has_task.super_role)
+        self.assertEqual(SUPER_ROLE.OWNER, user2_has_task.super_role)
 
     @patch('neomodel.StructuredRel.save')
     def test_change_invitation_change_super_role_admin(self, mock_save):
@@ -285,7 +290,7 @@ class TestUserNode(TestCase):
         task = TaskInst()
         target_user = UserNode()
         with self.assertRaises(NotOwner):
-            user.change_invitation(task, target_user)
+            user.change_invitation(task, target_user, super_role=SUPER_ROLE.ADMIN)
 
     @patch('neomodel.RelationshipManager.connect')
     @patch('neomodel.RelationshipManager.is_connected', return_value=False)

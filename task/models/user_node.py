@@ -109,20 +109,30 @@ class UserNode(StructuredNode):
         }
         user.tasks.connect(task, param)
 
+    def change_super_role(self, task, user, super_role):
+        if super_role is not None:
+            has_task = user.tasks.relationship(task)
+            self.assert_owner(task)
+            has_task.super_role = super_role
+            if super_role == SUPER_ROLE.OWNER and self.uid != user.uid:
+                user.assert_accept(task)
+                self_has_task = self.tasks.relationship(task)
+                self_has_task.super_role = SUPER_ROLE.ADMIN
+                self_has_task.save()
+            has_task.save()
+
+    def change_role(self, task, user, role):
+        if role is not None:
+            self.assert_admin(task)
+            has_task = user.tasks.relationship(task)
+            task.assert_role(role)
+            has_task.role = role
+            has_task.save()
+
     @db.transaction
     def change_invitation(self, task, user, role=None, super_role=None):
-        self.assert_owner(task)
-        task.assert_role(role)
-        if super_role == SUPER_ROLE.OWNER:
-            user.assert_accept(task)
-            self_has_task = self.tasks.relationship(task)
-            self_has_task.super_role = SUPER_ROLE.ADMIN
-            self_has_task.save()
-        has_task = user.tasks.relationship(task)
-        has_task.role = role
-        if super_role is not None:
-            has_task.super_role = super_role
-        has_task.save()
+        self.change_super_role(task, user, super_role)
+        self.change_role(task, user, role)
 
     def respond_invitation(self, task, acceptance):
         has_task = self.tasks.relationship(task)
