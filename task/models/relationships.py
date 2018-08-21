@@ -7,6 +7,9 @@ class HasTask(StructuredRel):
     role = StringProperty()
     acceptance = StringProperty(default=ACCEPTANCE.WAITING, choices=ACCEPTANCES)
 
+    def get_info(self):
+        return self.__properties__
+
 
 class HasStep(StructuredRel):
     pass
