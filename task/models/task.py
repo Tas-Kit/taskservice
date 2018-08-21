@@ -1,5 +1,5 @@
-"""Summary
-"""
+from copy import deepcopy
+
 from neomodel import (
     StructuredNode,
     StringProperty,
@@ -9,13 +9,14 @@ from neomodel import (
     UniqueIdProperty,
     RelationshipTo,
     RelationshipFrom,
-    db
+    db,
 )
 from relationships import HasStep, HasTask
+from neomodel.cardinality import ZeroOrOne
 from taskservice.constants import STATUS, TIME_UNITS, STATUS_LIST
 import utils
 from step import StepInst
-from taskservice.exceptions import NoSuchRole
+from taskservice.exceptions import NoSuchRole, BadRequest
 from taskservice.utils import userservice
 
 
@@ -33,6 +34,8 @@ class TaskModel(StructuredNode):
         steps (TYPE): Description
     """
 
+    origin = RelationshipTo('TaskInst',
+                            'Origin', cardinality=ZeroOrOne)
     name = StringProperty(required=True)
     description = StringProperty()
     expected_effort_num = FloatProperty()
@@ -42,9 +45,23 @@ class TaskModel(StructuredNode):
 
     steps = RelationshipTo(StepInst, 'HasStep', model=HasStep)
 
+    def assert_original(self):
+        if len(self.origin.all()) > 0:
+            raise BadRequest('This task is not original')
+
+    def assert_no_user(self):
+        if len(self.users.all()) > 0:
+            raise BadRequest('This task is not a valid task in Tastore')
+
     def assert_role(self, role):
         if role is not None and role not in self.roles:
             raise NoSuchRole(role)
+
+    def get_origin(self):
+        origin = self.origin.all()
+        if len(origin) > 0:
+            return origin[0]
+        return None
 
     def delete(self):
         for step in self.steps:
@@ -87,9 +104,14 @@ class TaskModel(StructuredNode):
             'nodes': nodes,
             'edges': edges,
             'users': users,
-            'task_info': self.__properties__
+            'task_info': self.get_info()
         }
         return data
+
+    def set_origin(self, origin_task):
+        self.assert_original()
+        origin_task.assert_original()
+        self.origin.connect(origin_task)
 
     def clone(self, task_info=None):
         """clone all the step model data and relations
@@ -107,6 +129,13 @@ class TaskModel(StructuredNode):
         task_info['status'] = STATUS.NEW
         task.save_graph(nodes, edges, task_info)
         return task
+
+    def get_info(self):
+        info = deepcopy(self.__properties__)
+        origin = self.get_origin()
+        if origin is not None:
+            info['origin'] = origin.tid
+        return info
 
     def remove_edges(self, edges):
         for from_sid, to_sid in edges:
@@ -201,6 +230,13 @@ class TaskModel(StructuredNode):
                 new_edges.append(edge)
                 edge_set.add(edge['from'] + edge['to'])
         return new_edges
+
+    def upgrade_graph(self, task):
+        data = task.get_graph()
+        nodes = data['nodes']
+        edges = data['edges']
+        task_info = data['task_info']
+        self.save_graph(nodes, edges, task_info)
 
     @db.transaction
     def save_graph(self, nodes, edges, task_info=None):

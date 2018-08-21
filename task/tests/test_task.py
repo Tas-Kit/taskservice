@@ -7,10 +7,29 @@ from task.models.step import StepInst
 from task.models.user_node import UserNode
 from mock import patch, MagicMock
 from taskservice.constants import STATUS, NODE_TYPE
+from taskservice.exceptions import BadRequest
 from dateutil.parser import parse
 
 
 class TestTask(TestCase):
+
+    def test_get_info_origin(self):
+        task = TaskInst()
+        task.origin = MagicMock()
+        origin_task = MagicMock()
+        origin_task.tid = 'hello'
+        task.origin.all = MagicMock(return_value=[origin_task])
+        origin = task.get_origin()
+        self.assertEqual(origin_task, origin)
+        info = task.get_info()
+        info['tid'] = 'hello'
+
+    def test_get_info_no_origin(self):
+        task = TaskInst()
+        task.origin = MagicMock()
+        task.origin.all = MagicMock(return_value=[])
+        origin = task.get_origin()
+        self.assertIs(None, origin)
 
     def test_preprocess_edges(self):
         sample_edges = [
@@ -37,12 +56,50 @@ class TestTask(TestCase):
             'to': 'node2'
         }], processed_edges)
 
+    @patch('task.models.task.TaskInst.upgrade_graph')
+    @patch('task.models.task.TaskInst.clone')
+    @patch('task.models.task.TaskInst.assert_original')
+    @patch('task.models.user_node.UserNode.assert_owner')
+    def test_upload(self,
+                    mock_assert_owner,
+                    mock_assert_original,
+                    mock_clone,
+                    mock_upgrade_graph):
+        user = UserNode()
+        task = TaskInst()
+        new_task = TaskInst()
+        mock_clone.return_value = new_task
+        result = user.upload(task)
+        self.assertTrue(new_task is result)
+        mock_assert_original.assert_called_once()
+        mock_assert_owner.assert_called_once_with(task)
+        mock_clone.assert_called_once()
+        mock_upgrade_graph.assert_not_called()
+
+    @patch('task.models.task.TaskInst.upgrade_graph')
+    @patch('task.models.task.TaskInst.clone')
+    @patch('task.models.task.TaskInst.assert_original')
+    @patch('task.models.user_node.UserNode.assert_owner')
+    def test_upload_existing_task(self,
+                                  mock_assert_owner,
+                                  mock_assert_original,
+                                  mock_clone,
+                                  mock_upgrade_graph):
+        user = UserNode()
+        task = TaskInst()
+        target_task = TaskInst()
+        new_task = user.upload(task, target_task)
+        self.assertIs(new_task, target_task)
+        mock_assert_owner.assert_called_once_with(task)
+        mock_assert_original.assert_called_once()
+        mock_clone.assert_not_called()
+        mock_upgrade_graph.assert_called_once()
+
     @patch('taskservice.utils.userservice.get_user_list', return_value=[])
     def test_clone(self, mock_get_user):
         user = UserNode(uid='sample').save()
         task = user.create_task('task')
         task.status = STATUS.IN_PROGRESS
-        task.save()
         step = StepInst(name='step', status=STATUS.IN_PROGRESS).save()
         start = task.steps.get(node_type=NODE_TYPE.START)
         end = task.steps.get(node_type=NODE_TYPE.END)
@@ -81,15 +138,15 @@ class TestTask(TestCase):
             'description': 'new description',
             'roles': ['role1', 'role2']
         }
-        task = TaskInst(roles=['role2', 'role3'])
+        task = TaskInst(name='hello', roles=['role2', 'role3'])
         task.update(task_info)
         self.assertEqual('new task', task.name)
         self.assertEqual('new description', task.description)
         self.assertEqual(['role1', 'role2'], task.roles)
+        self.assertEqual(['role1', 'role2'], task.roles)
         self.assertFalse(hasattr(task, 'id'))
         self.assertNotEqual('test tid', task.tid)
         self.assertEqual(parse(t), task.deadline)
-        mock_save.assert_called_once()
         mock_update_roles.assert_called_once_with(['role2', 'role3'])
 
     @patch('neomodel.StructuredNode.save')
@@ -181,6 +238,38 @@ class TestTask(TestCase):
         mock_change_nodes.assert_called_once()
         mock_add_edges.assert_called_once()
         mock_add_nodes.assert_called_once()
+
+    def test_upgrade_graph(self):
+        data = {
+            'nodes': 'abc',
+            'edges': 'def',
+            'task_info': 'ghi'
+        }
+        t1 = TaskInst()
+        t2 = TaskInst()
+        t1.save_graph = MagicMock()
+        t2.get_graph = MagicMock(return_value=data)
+        t1.upgrade_graph(t2)
+        t2.get_graph.assert_called_once()
+        t1.save_graph.assert_called_once_with('abc', 'def', 'ghi')
+
+    def test_assert_no_user(self):
+        user = UserNode(uid='abc').save()
+        task = user.create_task(name='name')
+        with self.assertRaises(BadRequest):
+            task.assert_no_user()
+
+        task = TaskInst(name='name').save()
+        task.assert_no_user()
+
+    def test_assert_original(self):
+        task = TaskInst(name='name').save()
+        task.assert_original()
+        new_task = TaskInst(name='new').save()
+        new_task.set_origin(task)
+        task.assert_original()
+        with self.assertRaises(BadRequest):
+            new_task.assert_original()
 
     @patch('neomodel.StructuredNode.save')
     def test_start(self, mock_save):

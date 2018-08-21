@@ -12,15 +12,52 @@ from taskservice.constants import SUPER_ROLE
 from task.utils import preprocess, get_user_by_username, assert_uid_valid
 
 
+class InternalDownload(APIView):
+    schema = Schema(manual_fields=[
+        Field(
+            'uid',
+            method='POST',
+            required=True
+        )
+    ])
+
+    def post(self, request, tid):
+        uid = request.data['uid']
+        user = UserNode.get_or_create({'uid': uid})[0]
+        task = TaskInst.nodes.get(tid=tid)
+        new_task = user.download(task)
+        return Response(new_task.get_info())
+
+
 class InternalTask(APIView):
+    schema = Schema(manual_fields=[
+        Field(
+            'uid',
+            method='POST',
+            required=True
+        ),
+        Field(
+            'target_tid',
+            method='POST',
+            required=False
+        ),
+    ])
 
     def get(self, request, tid):
         task = TaskInst.nodes.get(tid=tid)
-        return Response(task.__properties__)
+        return Response(task.get_info())
 
     def post(self, request, tid):
-        task = TaskInst.nodes.get(tid=tid)
-        return Response(task.clone().__properties__)
+        print 'request.data', request.data
+        uid = request.data['uid']
+        user = UserNode.get_or_create({'uid': uid})[0]
+        task = user.tasks.get(tid=tid)
+        target_task = None
+        if 'target_tid' in request.data:
+            target_tid = request.data['target_tid']
+            target_task = TaskInst.nodes.get(tid=target_tid)
+        task = user.upload(task, target_task)
+        return Response(task.get_info())
 
     def delete(self, request, tid):
         task = TaskInst.nodes.get(tid=tid)
@@ -33,12 +70,12 @@ class TaskTriggerView(APIView):
         Field(
             'sid',
             method='POST',
-            required=True
+            required=False
         )
     ])
 
     @preprocess
-    def post(self, request, user, task, sid):
+    def post(self, request, user, task, sid=None):
         user.trigger(task, sid)
         return Response(task.get_graph())
 
@@ -80,7 +117,7 @@ class TaskListView(APIView):
     def get(self, request, user):
         return Response({
             task.tid: {
-                'task': task.__properties__,
+                'task': task.get_info(),
                 'has_task': user.tasks.relationship(task).__properties__
             }
             for task in user.tasks
@@ -90,6 +127,13 @@ class TaskListView(APIView):
     def post(self, request, user, **task_info):
         task = user.create_task(task_info['name'], task_info)
         return Response(task.get_graph())
+
+
+class TodoListView(APIView):
+
+    @preprocess
+    def get(self, request, user):
+        return Response(user.get_todo_list())
 
 
 class TaskChangeInvitationView(APIView):
@@ -193,6 +237,7 @@ class TaskCloneView(APIView):
 
     @preprocess
     def post(self, request, user, task, task_info):
+        user.assert_accept(task)
         new_task = user.clone_task(task, task_info)
         return Response(new_task.get_graph())
 
@@ -262,12 +307,12 @@ class TaskDetailView(APIView):
 
     @preprocess
     def get(self, request, user, task):
-        return Response(task.__properties__)
+        return Response(task.get_info())
 
     @preprocess
     def patch(self, request, user, task, **task_info):
         user.update_task(task, task_info)
-        return Response(task.__properties__)
+        return Response(task.get_info())
 
     @preprocess
     def delete(self, request, user, task):

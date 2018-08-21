@@ -2,7 +2,7 @@ from neomodel import StructuredNode, StringProperty, RelationshipTo, db
 from relationships import HasTask
 from task import TaskInst
 from step import StepInst
-from taskservice.constants import SUPER_ROLE, ACCEPTANCE, NODE_TYPE, START_END_OFFSET
+from taskservice.constants import SUPER_ROLE, ACCEPTANCE, NODE_TYPE, START_END_OFFSET, STATUS
 from taskservice.exceptions import NotOwner, NotAdmin, NotAccept, AlreadyHasTheTask, OwnerCannotChangeInvitation, BadRequest
 
 
@@ -43,9 +43,57 @@ class UserNode(StructuredNode):
         if has_task.super_role == SUPER_ROLE.OWNER:
             raise OwnerCannotChangeInvitation()
 
-    def trigger(self, task, sid):
+    def get_todo_list(self):
+        query = """MATCH(
+                    (user:UserNode{{uid:'{uid}'}})
+                    -[:HasTask{{acceptance:'{accept}'}}]->
+                    (task:TaskInst{{status:'{in_progress}'}})
+                    -[:HasStep]->(step:StepInst)
+                )
+                WHERE step.status='{in_progress}' OR step.status='{ready_for_review}'
+                RETURN task, step"""
+        query = query.format(uid=self.uid,
+                             in_progress=STATUS.IN_PROGRESS,
+                             ready_for_review=STATUS.READY_FOR_REVIEW,
+                             accept=ACCEPTANCE.ACCEPT)
+        results, meta = db.cypher_query(query)
+
+        todo_list = [{
+            'step': StepInst.inflate(step).get_info(),
+            'task': TaskInst.inflate(task).get_info()
+        } for task, step in results]
+        return todo_list
+
+    def download(self, task):
+        """
+        Donwload a task from Tastore
+        """
+        task.assert_no_user()
+        new_task = self.clone_task(task)
+        new_task.set_origin(task)
+        return new_task
+
+    def upload(self, task, target_task=None):
+        """
+        Upload a task to Tastore
+        :param task: the task to clone
+        :param target_task: the task to upgrade
+        """
+        self.assert_owner(task)
+        task.assert_original()
+        if target_task is None:
+            new_task = task.clone()
+        else:
+            target_task.upgrade_graph(task)
+            new_task = target_task
+        return new_task
+
+    def trigger(self, task, sid=None):
         self.assert_accept(task)
-        step = task.steps.get(sid=sid)
+        if sid is None:
+            step = task.steps.get(node_type=NODE_TYPE.START)
+        else:
+            step = task.steps.get(sid=sid)
         has_task = self.tasks.relationship(task)
         step.trigger(role=has_task.role)
 
@@ -61,20 +109,30 @@ class UserNode(StructuredNode):
         }
         user.tasks.connect(task, param)
 
+    def change_super_role(self, task, user, super_role):
+        if super_role is not None:
+            has_task = user.tasks.relationship(task)
+            self.assert_owner(task)
+            has_task.super_role = super_role
+            if super_role == SUPER_ROLE.OWNER and self.uid != user.uid:
+                user.assert_accept(task)
+                self_has_task = self.tasks.relationship(task)
+                self_has_task.super_role = SUPER_ROLE.ADMIN
+                self_has_task.save()
+            has_task.save()
+
+    def change_role(self, task, user, role):
+        if role is not None:
+            self.assert_admin(task)
+            has_task = user.tasks.relationship(task)
+            task.assert_role(role)
+            has_task.role = role
+            has_task.save()
+
     @db.transaction
     def change_invitation(self, task, user, role=None, super_role=None):
-        self.assert_owner(task)
-        task.assert_role(role)
-        if super_role == SUPER_ROLE.OWNER:
-            user.assert_accept(task)
-            self_has_task = self.tasks.relationship(task)
-            self_has_task.super_role = SUPER_ROLE.ADMIN
-            self_has_task.save()
-        has_task = user.tasks.relationship(task)
-        has_task.role = role
-        if super_role is not None:
-            has_task.super_role = super_role
-        has_task.save()
+        self.change_super_role(task, user, super_role)
+        self.change_role(task, user, role)
 
     def respond_invitation(self, task, acceptance):
         has_task = self.tasks.relationship(task)
@@ -89,8 +147,8 @@ class UserNode(StructuredNode):
         self.assert_has_higher_permission(task, user)
         user.tasks.disconnect(task)
 
-    def clone_task(self, task, task_info):
-        self.assert_accept(task)
+    def clone_task(self, task, task_info=None):
+        task.assert_original()
         new_task = task.clone(task_info)
         has_task_param = {
             'super_role': SUPER_ROLE.OWNER,

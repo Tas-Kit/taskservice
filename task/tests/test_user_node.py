@@ -3,9 +3,10 @@ from __future__ import unicode_literals
 
 from django.test import TestCase
 from mock import patch, MagicMock
-from taskservice.constants import SUPER_ROLE, ACCEPTANCE, NODE_TYPE
+from taskservice.constants import SUPER_ROLE, ACCEPTANCE, NODE_TYPE, STATUS
 from task.models.user_node import UserNode
 from task.models.task import TaskInst
+from task.models.step import StepInst
 from task.models.relationships import HasTask
 from taskservice.exceptions import (
     NotAdmin,
@@ -64,6 +65,53 @@ class TestUserNode(TestCase):
         with self.assertRaises(BadRequest):
             user2.assert_has_higher_permission(task, user1)
 
+    def test_get_todo_list(self):
+        user = UserNode(uid='test_get_todo_list').save()
+        task1 = user.create_task('t1')
+        task2 = user.create_task('t2')
+        task3 = user.create_task('t3')
+
+        self.assertEqual([], user.get_todo_list())
+        task1.status = STATUS.IN_PROGRESS
+        task2.status = STATUS.IN_PROGRESS
+        task3.status = STATUS.COMPLETED
+        task1.save()
+        task2.save()
+        task3.save()
+
+        step1_1 = StepInst(name='s1_1', status=STATUS.COMPLETED).save()
+        step1_2 = StepInst(name='s1_2', status=STATUS.IN_PROGRESS).save()
+        step2_1 = StepInst(name='s2_1', status=STATUS.READY_FOR_REVIEW).save()
+        step2_2 = StepInst(name='s2_2', status=STATUS.SKIPPED).save()
+        step3_1 = StepInst(name='s3_1', status=STATUS.IN_PROGRESS).save()
+        step3_2 = StepInst(name='s3_2', status=STATUS.READY_FOR_REVIEW).save()
+
+        task1.steps.connect(step1_1)
+        task1.steps.connect(step1_2)
+        task2.steps.connect(step2_1)
+        task2.steps.connect(step2_2)
+        task3.steps.connect(step3_1)
+        task3.steps.connect(step3_2)
+
+        todo_list = user.get_todo_list()
+        todo_set = set(todo['task']['tid'] + todo['step']['sid'] for todo in todo_list)
+        self.assertEqual(2, len(todo_set))
+        self.assertIn(task1.tid + step1_2.sid, todo_set)
+        self.assertIn(task2.tid + step2_1.sid, todo_set)
+
+    @patch('task.models.user_node.UserNode.clone_task')
+    @patch('task.models.task.TaskModel.assert_no_user')
+    def test_download(self, mock_assert_no_user, mock_clone_task):
+        user = UserNode()
+        task = TaskInst()
+        new_task = MagicMock()
+        mock_clone_task.return_value = new_task
+        result = user.download(task)
+        self.assertEqual(new_task, result)
+        mock_assert_no_user.assert_called_once()
+        mock_clone_task.assert_called_once_with(task)
+        new_task.set_origin.assert_called_once_with(task)
+
     @patch('task.models.task.TaskModel.delete')
     @patch('task.models.user_node.UserNode.assert_owner')
     def test_delete_task(self, mock_assert_owner, mock_delete):
@@ -93,19 +141,34 @@ class TestUserNode(TestCase):
     @patch('task.models.user_node.UserNode.assert_accept')
     def test_trigger(self, mock_assert_accept, mock_relationship):
         user = UserNode()
-        user.trigger(MagicMock(), 'any sid')
+        task = MagicMock()
+        task.steps = MagicMock()
+        user.trigger(task, 'any sid')
         mock_assert_accept.assert_called_once()
+        task.steps.get.assert_called_once_with(
+            sid='any sid')
+
+    @patch('neomodel.RelationshipManager.relationship', return_value=MagicMock())
+    @patch('task.models.user_node.UserNode.assert_accept')
+    def test_trigger_start(self, mock_assert_accept, mock_relationship):
+        user = UserNode()
+        task = MagicMock()
+        task.steps = MagicMock()
+        user.trigger(task)
+        mock_assert_accept.assert_called_once()
+        task.steps.get.assert_called_once_with(node_type=NODE_TYPE.START)
 
     @patch('neomodel.RelationshipManager.connect')
-    @patch('task.models.user_node.UserNode.assert_accept')
-    def test_clone(self, mock_assert_accept, mock_connect):
+    def test_clone(self, mock_connect):
         user = UserNode()
-        new_task = user.clone_task(MagicMock(), {})
+        task = MagicMock()
+        task.assert_original = MagicMock()
+        new_task = user.clone_task(task, {})
         mock_connect.assert_called_once_with(new_task, {
             'super_role': SUPER_ROLE.OWNER,
             'acceptance': ACCEPTANCE.ACCEPT
         })
-        mock_assert_accept.assert_called_once()
+        task.assert_original.assert_called_once()
 
     @patch('task.models.user_node.UserNode.assert_accept')
     @patch('task.models.user_node.UserNode.assert_admin')
@@ -155,30 +218,35 @@ class TestUserNode(TestCase):
         with self.assertRaises(OwnerCannotChangeInvitation):
             user.respond_invitation(task, ACCEPTANCE.WAITING)
 
-    @patch('neomodel.StructuredRel.save')
-    def test_change_invitation_change_owner(self, mock_save):
-        mock_owner_has_task = HasTask(super_role=SUPER_ROLE.OWNER, acceptance=ACCEPTANCE.ACCEPT)
-        mock_user_has_task = HasTask(super_role=SUPER_ROLE.STANDARD, acceptance=ACCEPTANCE.ACCEPT)
-        user = UserNode()
-        task = TaskInst()
-        target_user = UserNode()
-        user.tasks.relationship = MagicMock(return_value=mock_owner_has_task)
-        target_user.tasks.relationship = MagicMock(return_value=mock_user_has_task)
-        user.change_invitation(task, target_user, super_role=SUPER_ROLE.OWNER)
-        self.assertEqual(SUPER_ROLE.OWNER, mock_user_has_task.super_role)
-        self.assertEqual(SUPER_ROLE.ADMIN, mock_owner_has_task.super_role)
+    def test_change_role(self):
+        user = UserNode(uid='test_change_role').save()
+        task = user.create_task('task', {'roles': ['teacher', 'student']})
+        user_has_task = user.tasks.relationship(task)
+        user_has_task.super_role = SUPER_ROLE.STANDARD
+        user_has_task.save()
+        with self.assertRaises(NotAdmin):
+            user.change_role(task, user, 'teacher')
+        user_has_task.super_role = SUPER_ROLE.ADMIN
+        user_has_task.save()
+        user.change_role(task, user, 'teacher')
+        user_has_task = user.tasks.relationship(task)
+        self.assertEqual('teacher', user_has_task.role)
+        with self.assertRaises(NoSuchRole):
+            user.change_role(task, user, 'parent')
 
-    @patch('neomodel.StructuredRel.save')
-    def test_change_invitation_change_owner_user_not_accepted(self, mock_save):
-        mock_owner_has_task = HasTask(super_role=SUPER_ROLE.OWNER, acceptance=ACCEPTANCE.ACCEPT)
-        mock_user_has_task = HasTask(super_role=SUPER_ROLE.STANDARD, acceptance=ACCEPTANCE.WAITING)
-        user = UserNode()
-        task = TaskInst()
-        target_user = UserNode()
-        user.tasks.relationship = MagicMock(return_value=mock_owner_has_task)
-        target_user.tasks.relationship = MagicMock(return_value=mock_user_has_task)
+    def test_change_task_owner(self):
+        user1 = UserNode(uid='test_change_task_owner_1').save()
+        task = user1.create_task('task')
+        user2 = UserNode(uid='test_change_task_owner_2').save()
+        user2.tasks.connect(task)
         with self.assertRaises(NotAccept):
-            user.change_invitation(task, target_user, super_role=SUPER_ROLE.OWNER)
+            user1.change_super_role(task, user2, SUPER_ROLE.OWNER)
+        user2.respond_invitation(task, ACCEPTANCE.ACCEPT)
+        user1.change_super_role(task, user2, SUPER_ROLE.OWNER)
+        user1_has_task = user1.tasks.relationship(task)
+        user2_has_task = user2.tasks.relationship(task)
+        self.assertEqual(SUPER_ROLE.ADMIN, user1_has_task.super_role)
+        self.assertEqual(SUPER_ROLE.OWNER, user2_has_task.super_role)
 
     @patch('neomodel.StructuredRel.save')
     def test_change_invitation_change_super_role_admin(self, mock_save):
@@ -222,7 +290,7 @@ class TestUserNode(TestCase):
         task = TaskInst()
         target_user = UserNode()
         with self.assertRaises(NotOwner):
-            user.change_invitation(task, target_user)
+            user.change_invitation(task, target_user, super_role=SUPER_ROLE.ADMIN)
 
     @patch('neomodel.RelationshipManager.connect')
     @patch('neomodel.RelationshipManager.is_connected', return_value=False)
