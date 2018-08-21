@@ -130,11 +130,14 @@ class TaskModel(StructuredNode):
         task.save_graph(nodes, edges, task_info)
         return task
 
-    def get_info(self):
+    def get_info(self, user=None):
         info = deepcopy(self.__properties__)
         origin = self.get_origin()
         if origin is not None:
             info['origin'] = origin.tid
+        if user is not None:
+            has_task = user.tasks.relationship(self)
+            info['has_task'] = has_task.get_info()
         return info
 
     def remove_edges(self, edges):
