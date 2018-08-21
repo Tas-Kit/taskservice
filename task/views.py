@@ -133,7 +133,9 @@ class TodoListView(APIView):
 
     @preprocess
     def get(self, request, user):
-        return Response(user.get_todo_list())
+        return Response({
+            'todo_list': user.get_todo_list()
+        })
 
 
 class TaskChangeInvitationView(APIView):
