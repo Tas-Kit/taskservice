@@ -1,6 +1,9 @@
 from taskservice.exceptions import MissingRequiredParam, BadRequest
 from task.models.user_node import UserNode
+from task.models.task import TaskInst
 from taskservice.utils import userservice
+
+from taskservice.constants import ACCEPTANCE
 
 
 def assert_uid_valid(uid):
@@ -47,7 +50,19 @@ def process_fields(apiview, request, kwargs):
 
 def tid_to_task(user, kwargs):
     if 'tid' in kwargs:
-        task = user.tasks.get(tid=kwargs['tid'])
+        task = TaskInst.nodes.get(tid=kwargs['tid'])
+        if task.allow_link_sharing:
+            has_task = user.tasks.relationship(task)
+            if has_task is None:
+                user.tasks.connect(task, {'acceptance': ACCEPTANCE.ACCEPT})
+            else:
+                has_task.acceptance = ACCEPTANCE.ACCEPT
+                has_task.save()
+        else:
+            task = user.tasks.get(tid=kwargs['tid'])
+            has_task = user.tasks.relationship(task)
+            has_task.acceptance = ACCEPTANCE.ACCEPT
+            has_task.save()
         del kwargs['tid']
         kwargs['task'] = task
 

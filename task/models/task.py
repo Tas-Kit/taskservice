@@ -6,6 +6,7 @@ from neomodel import (
     FloatProperty,
     DateTimeProperty,
     ArrayProperty,
+    BooleanProperty,
     UniqueIdProperty,
     RelationshipTo,
     RelationshipFrom,
@@ -42,6 +43,7 @@ class TaskModel(StructuredNode):
     expected_effort_unit = StringProperty(choices=TIME_UNITS)
     deadline = DateTimeProperty()
     roles = ArrayProperty(StringProperty(), default=[])
+    allow_link_sharing = BooleanProperty(default=False)
 
     steps = RelationshipTo(StepInst, 'HasStep', model=HasStep)
 
