@@ -118,7 +118,7 @@ class TaskListView(APIView):
         return Response({
             task.tid: {
                 'task': task.get_info(),
-                'has_task': user.tasks.relationship(task).__properties__
+                'has_task': user.tasks.relationship(task).get_info()
             }
             for task in user.tasks
         })
@@ -224,7 +224,7 @@ class TaskInvitationView(APIView):
         user.invite(task, target_user_node, super_role, role)
         return Response({
             'basic': target_user,
-            'has_task': target_user_node.tasks.relationship(task).__properties__
+            'has_task': target_user_node.tasks.relationship(task).get_info()
         })
 
 
