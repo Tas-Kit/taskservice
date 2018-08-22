@@ -2,10 +2,14 @@
 from __future__ import unicode_literals
 
 from django.test import TestCase
+from neomodel.exceptions import DoesNotExist
 from mock import patch, MagicMock
+
 from task import utils
 from taskservice.exceptions import MissingRequiredParam, BadRequest
 from task.models.user_node import UserNode
+from task.models.task import TaskInst
+from taskservice.constants import ACCEPTANCE
 # Create your tests here.
 
 
@@ -69,15 +73,41 @@ class TestUtils(TestCase):
         self.assertEqual(mock_process_single_field.call_count, 3)
 
     def test_tid_to_task(self):
-        user = UserNode()
-        mock_task = MagicMock()
-        kwargs = {'tid': 'anytaskid'}
-        with patch('neomodel.RelationshipManager.get') as mock_get:
-            mock_get.return_value = mock_task
+        user = UserNode(uid='abc').save()
+        task = TaskInst(name='hi').save()
+
+        kwargs = {'tid': task.tid}
+        with self.assertRaises(DoesNotExist):
             utils.tid_to_task(user, kwargs)
-            self.assertTrue('tid' not in kwargs)
-            self.assertIs(mock_task, kwargs['task'])
-            mock_get.assert_called_once_with(tid='anytaskid')
+
+        task.allow_link_sharing = True
+        task.save()
+
+        utils.tid_to_task(user, kwargs)
+        self.assertNotIn('tid', kwargs)
+        self.assertEqual(task, kwargs['task'])
+        has_task = user.tasks.relationship(task)
+        self.assertEqual(ACCEPTANCE.ACCEPT, has_task.acceptance)
+
+        has_task.acceptance = ACCEPTANCE.REJECT
+        has_task.save()
+        kwargs = {'tid': task.tid}
+        utils.tid_to_task(user, kwargs)
+        self.assertNotIn('tid', kwargs)
+        self.assertEqual(task, kwargs['task'])
+        has_task = user.tasks.relationship(task)
+        self.assertEqual(ACCEPTANCE.ACCEPT, has_task.acceptance)
+
+        task.allow_link_sharing = False
+        has_task.acceptance = ACCEPTANCE.REJECT
+        task.save()
+        has_task.save()
+        kwargs = {'tid': task.tid}
+        utils.tid_to_task(user, kwargs)
+        self.assertNotIn('tid', kwargs)
+        self.assertEqual(task, kwargs['task'])
+        has_task = user.tasks.relationship(task)
+        self.assertEqual(ACCEPTANCE.ACCEPT, has_task.acceptance)
 
     @patch('task.utils.tid_to_task')
     @patch('task.utils.get_user', return_value='mock_user')
