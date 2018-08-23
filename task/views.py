@@ -108,6 +108,10 @@ class TaskListView(APIView):
             method='POST',
         ),
         Field(
+            'allow_link_sharing',
+            method='POST',
+        ),
+        Field(
             'description',
             method='POST',
         ),
@@ -299,6 +303,10 @@ class TaskDetailView(APIView):
         ),
         Field(
             'expected_effort_num',
+            method='PATCH',
+        ),
+        Field(
+            'allow_link_sharing',
             method='PATCH',
         ),
         Field(
