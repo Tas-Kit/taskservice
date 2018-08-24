@@ -60,7 +60,8 @@ class UserNode(StructuredNode):
 
         todo_list = [{
             'step': StepInst.inflate(step).get_info(),
-            'task': TaskInst.inflate(task).get_info()
+            'task': TaskInst.inflate(task).get_info(),
+            'has_task': self.tasks.relationship(TaskInst.inflate(task)).get_info()
         } for task, step in results]
         return todo_list
 
