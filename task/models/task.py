@@ -129,6 +129,7 @@ class TaskModel(StructuredNode):
         utils.reset_nodes_status(nodes)
         task = TaskInst(name=self.name + ' copy').save()
         task_info['status'] = STATUS.NEW
+        task_info['allow_link_sharing'] = False
         task.save_graph(nodes, edges, task_info)
         return task
 
@@ -205,10 +206,10 @@ class TaskModel(StructuredNode):
 
     def update(self, task_info):
         if task_info:
-            if 'id' in task_info:
-                del task_info['id']
-            if 'tid' in task_info:
-                del task_info['tid']
+            bad_keyword = ['id', 'tid', 'update_roles', 'save']
+            for keyword in bad_keyword:
+                if keyword in task_info:
+                    del task_info[keyword]
             if 'deadline' in task_info:
                 utils.update_datetime(self, 'deadline', task_info)
             old_roles = self.roles
