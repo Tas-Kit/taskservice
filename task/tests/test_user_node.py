@@ -65,6 +65,40 @@ class TestUserNode(TestCase):
         with self.assertRaises(BadRequest):
             user2.assert_has_higher_permission(task, user1)
 
+    def test_get_todo_list_with_role(self):
+        user = UserNode(uid='test_get_todo_list_with_role').save()
+        task = user.create_task('task', {
+            'status': STATUS.IN_PROGRESS,
+            'roles': ['teacher', 'student', 'parent']
+        })
+        step1 = StepInst(name='s1',
+                         status=STATUS.IN_PROGRESS,
+                         assignees=['student', 'parent'],
+                         reviewers=['student', 'teacher']).save()
+        step2 = StepInst(name='s2',
+                         status=STATUS.READY_FOR_REVIEW,
+                         assignees=['student', 'parent'],
+                         reviewers=['student', 'teacher']).save()
+        step3 = StepInst(name='s3',
+                         status=STATUS.IN_PROGRESS,
+                         assignees=['parent'],
+                         reviewers=['teacher']).save()
+        step4 = StepInst(name='s4',
+                         status=STATUS.IN_PROGRESS,
+                         assignees=['parent'],
+                         reviewers=['teacher']).save()
+        task.steps.connect(step1)
+        task.steps.connect(step2)
+        task.steps.connect(step3)
+        task.steps.connect(step4)
+        user.change_role(task, user, 'student')
+
+        todo_list = user.get_todo_list()
+        todo_set = set(todo['step']['sid'] for todo in todo_list)
+        self.assertEqual(2, len(todo_set))
+        self.assertIn(step1.sid, todo_set)
+        self.assertIn(step2.sid, todo_set)
+
     def test_get_todo_list(self):
         user = UserNode(uid='test_get_todo_list').save()
         task1 = user.create_task('t1')
