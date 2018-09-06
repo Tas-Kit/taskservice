@@ -292,19 +292,27 @@ class TestUserNode(TestCase):
         with self.assertRaises(NotOwner):
             user.change_invitation(task, target_user, super_role=SUPER_ROLE.ADMIN)
 
+    @patch('task.models.user_node.notifications.invite')
     @patch('neomodel.RelationshipManager.connect')
     @patch('neomodel.RelationshipManager.is_connected', return_value=False)
     @patch('neomodel.RelationshipManager.relationship',
            return_value=HasTask(super_role=SUPER_ROLE.ADMIN, acceptance=ACCEPTANCE.ACCEPT))
-    def test_invite_success(self, mock_relationship, mock_is_connected, mock_connect):
+    def test_invite_success(self, mock_relationship, mock_is_connected, mock_connect, mock_invite):
         user = UserNode()
+        user.uid = 'abc'
         target_user = UserNode()
+        target_user.uid = 'def'
         task = TaskInst(roles=['teacher'])
+        task.tid = 'xyz'
         user.invite(task, target_user, role='teacher')
         mock_connect.assert_called_once_with(task, {
             'role': 'teacher',
             'super_role': SUPER_ROLE.STANDARD
         })
+        mock_invite.assert_called_once_with(
+            [target_user.uid],
+            inviter_id=user.uid,
+            task_id=task.tid)
 
     @patch('neomodel.RelationshipManager.is_connected', return_value=True)
     @patch('neomodel.RelationshipManager.relationship',
