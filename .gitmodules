@@ -1,0 +1,3 @@
+[submodule "taskservice/services"]
+	path = taskservice/services
+	url = https://github.com/Tas-Kit/services
