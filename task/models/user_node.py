@@ -46,11 +46,16 @@ class UserNode(StructuredNode):
     def get_todo_list(self):
         query = """MATCH(
                     (user:UserNode{{uid:'{uid}'}})
-                    -[:HasTask{{acceptance:'{accept}'}}]->
+                    -[has_task:HasTask{{acceptance:'{accept}'}}]->
                     (task:TaskInst{{status:'{in_progress}'}})
                     -[:HasStep]->(step:StepInst)
                 )
-                WHERE step.status='{in_progress}' OR step.status='{ready_for_review}'
+                WHERE (step.status='{in_progress}' AND
+                        (has_task.role IN step.assignees OR
+                            length(step.assignees)=0)) OR
+                        (step.status='{ready_for_review}' AND
+                        (has_task.role IN step.reviewers OR
+                            length(step.reviewers)=0))
                 RETURN task, step"""
         query = query.format(uid=self.uid,
                              in_progress=STATUS.IN_PROGRESS,
