@@ -4,6 +4,9 @@ from task import TaskInst
 from step import StepInst
 from taskservice.constants import SUPER_ROLE, ACCEPTANCE, NODE_TYPE, START_END_OFFSET, STATUS
 from taskservice.exceptions import NotOwner, NotAdmin, NotAccept, AlreadyHasTheTask, OwnerCannotChangeInvitation, BadRequest
+from taskservice.services import NOTIFICATIONS
+
+notifications = NOTIFICATIONS()
 
 
 class UserNode(StructuredNode):
@@ -114,6 +117,7 @@ class UserNode(StructuredNode):
             'super_role': super_role
         }
         user.tasks.connect(task, param)
+        notifications.invite([user.uid], inviter_id=self.uid, task_id=task.tid)
 
     def change_super_role(self, task, user, super_role):
         if super_role is not None:
