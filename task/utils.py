@@ -1,6 +1,7 @@
 from taskservice.exceptions import MissingRequiredParam, BadRequest
 from task.models.user_node import UserNode
 from task.models.task import TaskInst
+from task.models.step import StepInst
 from taskservice.utils import userservice
 
 from taskservice.constants import ACCEPTANCE
@@ -67,11 +68,19 @@ def tid_to_task(user, kwargs):
         kwargs['task'] = task
 
 
+def sid_to_step(user, kwargs):
+    if 'sid' in kwargs:
+        step = StepInst.nodes.get(sid=kwargs['sid'])
+        del kwargs['sid']
+        kwargs['step'] = step
+
+
 def preprocess(func):
     def wrapper(apiview, request, *args, **kwargs):
         process_fields(apiview, request, kwargs)
         user = get_user(request)
         tid_to_task(user, kwargs)
+        sid_to_step(user, kwargs)
         return func(apiview, request, user, *args, **kwargs)
     wrapper.func = func
     return wrapper

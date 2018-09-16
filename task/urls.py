@@ -11,7 +11,8 @@ from task.views import (
     TaskChangeInvitationView,
     TaskRespondInvitationView,
     TaskRevokeInvitationView,
-    TodoListView
+    TodoListView,
+    TaskStepView,
 )
 
 from rest_framework.schemas import get_schema_view
@@ -28,6 +29,9 @@ urlpatterns = [
     url(r'^todo/$', TodoListView.as_view()),
     url(r'^task/$', TaskListView.as_view()),
     url(r'^task/(?P<tid>[0-9a-z]*)/$', TaskDetailView.as_view()),
+
+    url(r'^task/(?P<tid>[0-9a-z]*)/step/(?P<sid>[0-9a-z]*)/$', TaskStepView.as_view()),
+
     url(r'^task/trigger/(?P<tid>[0-9a-z]*)/$', TaskTriggerView.as_view()),
     url(r'^task/graph/(?P<tid>[0-9a-z]*)/$', TaskGraphView.as_view()),
     url(r'^task/clone/(?P<tid>[0-9a-z]*)/$', TaskCloneView.as_view()),

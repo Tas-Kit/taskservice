@@ -328,3 +328,73 @@ class TaskDetailView(APIView):
     def delete(self, request, user, task):
         user.delete_task(task)
         return Response('SUCCESS')
+
+
+class TaskStepView(APIView):
+    schema = Schema(manual_fields=[
+        Field(
+            'name',
+            method='PATCH',
+        ),
+        Field(
+            'description',
+            method='PATCH',
+        ),
+        Field(
+            'status',
+            method='PATCH',
+        ),
+        Field(
+            'is_optional',
+            method='PATCH',
+        ),
+        Field(
+            'expected_effort_unit',
+            method='PATCH',
+        ),
+        Field(
+            'expected_effort_num',
+            method='PATCH',
+        ),
+        Field(
+            'deadline',
+            method='PATCH',
+        ),
+        Field(
+            'assignees',
+            method='PATCH',
+        ),
+        Field(
+            'reviewers',
+            method='PATCH',
+        ),
+        Field(
+            'node_type',
+            method='PATCH',
+        ),
+        Field(
+            'pos_x',
+            method='PATCH',
+        ),
+        Field(
+            'pos_y',
+            method='PATCH',
+        ),
+        Field(
+            'nexts',
+            method='PATCH',
+        ),
+        Field(
+            'prevs',
+            method='PATCH',
+        ),
+    ])
+
+    @preprocess
+    def get(self, request, user, task=None, step=None):
+        return Response(step.get_info())
+
+    @preprocess
+    def patch(self, request, user, task=None, step=None, **step_info):
+        step.update(step, step_info)
+        return Response(step.get_info())

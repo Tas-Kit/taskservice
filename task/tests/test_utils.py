@@ -9,6 +9,7 @@ from task import utils
 from taskservice.exceptions import MissingRequiredParam, BadRequest
 from task.models.user_node import UserNode
 from task.models.task import TaskInst
+from task.models.step import StepInst
 from taskservice.constants import ACCEPTANCE
 # Create your tests here.
 
@@ -108,6 +109,19 @@ class TestUtils(TestCase):
         self.assertEqual(task, kwargs['task'])
         has_task = user.tasks.relationship(task)
         self.assertEqual(ACCEPTANCE.ACCEPT, has_task.acceptance)
+
+    def test_sid_to_step(self):
+        user = UserNode(uid='user_abc').save()
+        step = StepInst(name='step1').save()
+
+        kwargs = {'sid': ''}
+        with self.assertRaises(DoesNotExist):
+            utils.sid_to_step(user, kwargs)
+
+        kwargs = {'sid': step.sid}
+        utils.sid_to_step(user, kwargs)
+        self.assertNotIn('sid', kwargs)
+        self.assertEqual(step, kwargs['step'])
 
     @patch('task.utils.tid_to_task')
     @patch('task.utils.get_user', return_value='mock_user')
