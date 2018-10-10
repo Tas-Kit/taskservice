@@ -138,6 +138,8 @@ class TaskModel(StructuredNode):
         origin = self.get_origin()
         if origin is not None:
             info['origin'] = origin.tid
+        if 'id' in info:
+            del info['id']
         return info
 
     def remove_edges(self, edges):

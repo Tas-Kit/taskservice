@@ -8,13 +8,15 @@ from neomodel import (
     UniqueIdProperty,
     RelationshipTo,
     RelationshipFrom,
+    db
 )
 
 import utils
 from relationships import Next
 from taskservice.constants import NODE_TYPE, STATUS, TIME_UNITS, STATUS_LIST, NODE_TYPES
 from taskservice.exceptions import CannotComplete
-from relationships import HasStep
+from relationships import HasStep, HasComponent
+from component import ComponentModel
 
 
 class StepModel(StructuredNode):
@@ -33,13 +35,37 @@ class StepModel(StructuredNode):
 
 
 class StepInst(StepModel):
+    components = RelationshipTo('ComponentModel', 'HasComponent', model=HasComponent)
     nexts = RelationshipTo('StepInst', 'Next', model=Next)
     prevs = RelationshipFrom('StepInst', 'Next', model=Next)
     sid = UniqueIdProperty()
     status = StringProperty(default=STATUS.NEW, choices=STATUS_LIST)
 
+    @db.transaction
+    def add_components(self, components):
+        for component in components:
+            component_model = ComponentModel(**component).save()
+            self.components.connect(component_model)
+        return self.get_components()
+
+    @db.transaction
+    def delete_components(self, oid_list):
+        components = self.components.filter(oid__in=oid_list)
+        for component in components:
+            component.delete()
+        return self.get_components()
+
+    def get_components(self):
+        return {
+            component.oid : component.get_info()
+            for component in self.components.all()
+        }
+
     def get_info(self):
-        return self.__properties__
+        info = self.__properties__
+        if 'id' in info:
+            del info['id']
+        return info
 
     def update(self, data):
         if 'sid' in data:

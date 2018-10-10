@@ -11,7 +11,8 @@ from task.views import (
     TaskChangeInvitationView,
     TaskRespondInvitationView,
     TaskRevokeInvitationView,
-    TodoListView
+    TodoListView,
+    ComponentView
 )
 
 from rest_framework.schemas import get_schema_view
@@ -27,6 +28,7 @@ urlpatterns = [
     url(r'^internal/task/(?P<tid>[0-9a-z]*)/download/$', InternalDownload.as_view()),
     url(r'^todo/$', TodoListView.as_view()),
     url(r'^task/$', TaskListView.as_view()),
+    url(r'^task/(?P<tid>[0-9a-z]*)/(?P<sid>[0-9a-z]*)/component/$', ComponentView.as_view()),
     url(r'^task/(?P<tid>[0-9a-z]*)/$', TaskDetailView.as_view()),
     url(r'^task/trigger/(?P<tid>[0-9a-z]*)/$', TaskTriggerView.as_view()),
     url(r'^task/graph/(?P<tid>[0-9a-z]*)/$', TaskGraphView.as_view()),

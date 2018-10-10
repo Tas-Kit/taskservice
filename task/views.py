@@ -65,6 +65,41 @@ class InternalTask(APIView):
         return Response('SUCCESS')
 
 
+class ComponentView(APIView):
+    schema = Schema(manual_fields=[
+        Field(
+            'components',
+            method='POST',
+            required=True
+        ),
+        Field(
+            'oid_list',
+            method='DELETE',
+            required=True
+        )
+    ])
+
+    @preprocess
+    def get(self, request, user, task, sid):
+        print user, task, sid
+        return Response({
+            'components': user.get_step_components(task, sid)
+        })
+
+    @preprocess
+    def post(self, request, user, task, sid, components):
+        return Response({
+            'components': user.add_step_components(task, sid, components)
+        })
+
+    @preprocess
+    def delete(self, request, user, task, sid, oid_list):
+        print oid_list, type(oid_list) is list
+        return Response({
+            'components': user.delete_step_components(task, sid, oid_list)
+        })
+
+
 class TaskTriggerView(APIView):
     schema = Schema(manual_fields=[
         Field(
