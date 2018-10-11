@@ -136,7 +136,7 @@ NEO4J_USER = os.getenv('NEO4J_USER', 'neo4j')
 NEO4J_PASS = os.getenv('NEO4J_PASS', 'neo4jpass')
 
 TASKDB = os.getenv('TASKDB', 'taskdb')
-TASKDB = 'neo4jdb'
+# TASKDB = 'neo4jdb'
 
 NEO4J_PROTOCOL = os.getenv('NEO4J_PROTOCOL', 'bolt')
 NEOMODEL_NEO4J_BOLT_URL = '{}://{}:{}@{}:7687'.format(NEO4J_PROTOCOL, NEO4J_USER, NEO4J_PASS, TASKDB)
