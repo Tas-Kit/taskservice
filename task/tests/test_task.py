@@ -295,8 +295,9 @@ class TestTask(TestCase):
         task.remove_edges(edges)
         node1.nexts.disconnect.assert_called_once_with(node2)
 
+    @patch('task.models.step.StepInst.delete_components')
     @patch('neomodel.StructuredNode.delete')
-    def test_remove_nodes(self, mock_delete):
+    def test_remove_nodes(self, mock_delete, mock_delete_components):
         node1 = StepInst()
         node2 = StepInst()
         task = TaskInst()

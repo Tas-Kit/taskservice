@@ -49,11 +49,18 @@ class StepInst(StepModel):
         return self.get_components()
 
     @db.transaction
-    def delete_components(self, oid_list):
-        components = self.components.filter(oid__in=oid_list)
+    def delete_components(self, oid_list=None):
+        if oid_list is None:
+            components = self.components.all()
+        else:
+            components = self.components.filter(oid__in=oid_list)
         for component in components:
             component.delete()
         return self.get_components()
+
+    def delete(self):
+        self.delete_components()
+        super(StepInst, self).delete()
 
     def get_components(self):
         return {
