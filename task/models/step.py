@@ -48,7 +48,6 @@ class StepInst(StepModel):
             self.components.connect(component_model)
         return self.get_components()
 
-    @db.transaction
     def delete_components(self, oid_list=None):
         if oid_list is None:
             components = self.components.all()
