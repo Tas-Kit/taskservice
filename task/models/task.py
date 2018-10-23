@@ -208,7 +208,7 @@ class TaskModel(StructuredNode):
 
     def update(self, task_info):
         if task_info:
-            bad_keyword = ['id', 'tid', 'update_roles', 'save']
+            bad_keyword = ['id', 'tid', 'update_roles', 'save', 'origin']
             for keyword in bad_keyword:
                 if keyword in task_info:
                     del task_info[keyword]
