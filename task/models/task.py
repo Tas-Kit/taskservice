@@ -138,6 +138,8 @@ class TaskModel(StructuredNode):
         origin = self.get_origin()
         if origin is not None:
             info['origin'] = origin.tid
+        if 'id' in info:
+            del info['id']
         return info
 
     def remove_edges(self, edges):
@@ -206,7 +208,7 @@ class TaskModel(StructuredNode):
 
     def update(self, task_info):
         if task_info:
-            bad_keyword = ['id', 'tid', 'update_roles', 'save']
+            bad_keyword = ['id', 'tid', 'update_roles', 'save', 'origin']
             for keyword in bad_keyword:
                 if keyword in task_info:
                     del task_info[keyword]

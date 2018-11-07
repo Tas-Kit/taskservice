@@ -97,6 +97,23 @@ class UserNode(StructuredNode):
             new_task = target_task
         return new_task
 
+    def get_step_components(self, task, sid):
+        self.assert_accept(task)
+        step = task.steps.get(sid=sid)
+        return step.get_components()
+
+    def add_step_components(self, task, sid, components):
+        self.assert_accept(task)
+        self.assert_admin(task)
+        step = task.steps.get(sid=sid)
+        return step.add_components(components)
+
+    def delete_step_components(self, task, sid, oid_list):
+        self.assert_accept(task)
+        self.assert_admin(task)
+        step = task.steps.get(sid=sid)
+        return step.delete_components(oid_list)
+
     def trigger(self, task, sid=None):
         self.assert_accept(task)
         if sid is None:

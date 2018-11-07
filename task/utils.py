@@ -66,6 +66,10 @@ def tid_to_task(user, kwargs):
         del kwargs['tid']
         kwargs['task'] = task
 
+# def sid_to_step(kwargs):
+#     if 'task' in kwargs and 'sid' in kwargs:
+#         step = task.steps.get(sid=kwargs['sid'])
+#         kwargs['step'] = step
 
 def preprocess(func):
     def wrapper(apiview, request, *args, **kwargs):

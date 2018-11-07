@@ -3,7 +3,7 @@ djangorestframework
 requests
 djangorestframework-jwt
 psycopg2-binary
-neomodel
+neomodel==3.2.9
 django_neomodel
 pillow
 cryptography

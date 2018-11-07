@@ -32,6 +32,52 @@ class TestStep(TestCase):
         self.assertNotIn('id', data)
         self.assertNotIn('sid', data)
 
+class TestStepComponent(TestCase):
+
+    def test_add_then_delete(self):
+        self.maxDiff = 1000
+        s = StepInst(name='s').save()
+        components = s.add_components([{
+            'app': 'Hello',
+            'cmp': 'World',
+            'oid': '12345'
+        },{
+            'app': 'Test',
+            'cmp': 'OBJ',
+            'oid': '23456'
+        },{
+            'app': 'Happy',
+            'cmp': 'Lemon',
+            'oid': '34567'
+        }])
+        self.assertEqual(components, {
+            '12345': {
+                'app': 'Hello',
+                'cmp': 'World',
+                'oid': '12345'
+            },
+            '23456': {
+                'app': 'Test',
+                'cmp': 'OBJ',
+                'oid': '23456'
+            },
+            '34567': {
+                'app': 'Happy',
+                'cmp': 'Lemon',
+                'oid': '34567'
+            }
+        })
+        components = s.delete_components(['23456', '34567'])
+        self.assertEqual(components, {
+            '12345': {
+                'app': 'Hello',
+                'cmp': 'World',
+                'oid': '12345'
+            }
+        })
+        components = s.delete_components(['12345'])
+        self.assertEqual(components, {})
+
 
 # Create your tests here.
 class TestStepTrigger(TestCase):

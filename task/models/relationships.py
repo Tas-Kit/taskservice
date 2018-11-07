@@ -15,5 +15,9 @@ class HasStep(StructuredRel):
     pass
 
 
+class HasComponent(StructuredRel):
+    pass
+
+
 class Next(StructuredRel):
     label = StringProperty(required=False)
