@@ -90,6 +90,7 @@ class TaskModel(StructuredNode):
                 'has_task': self.users.relationship(user_map[task_user['uid']]).__properties__
             }
             for task_user in userservice.get_user_list(user_map.keys())
+            if self.users.relationship(user_map[task_user['uid']]) is not None
         ]
 
         edges = [
